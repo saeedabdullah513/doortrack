@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  AGENT
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum DayStatus {
+  IN_PROGRESS   // at least one open punch entry
+  COMPLETED     // punched out, total >= 8h
+  BELOW_TARGET  // punched out, total < 8h
+  ABSENT
+}
+
+model User {
+  id             String         @id @default(uuid())
+  name           String
+  email          String         @unique
+  phone          String?
+  password       String
+  role           Role           @default(AGENT)
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  attendanceDays AttendanceDay[]
+  punchEntries   PunchEntry[]
+  auditLogsBy    AuditLog[]     @relation("AdminAuditLogs")
+  auditLogsOn    AuditLog[]     @relation("TargetAuditLogs")
+
+  @@map("users")
+}
+
+// One record per agent per calendar day
+model AttendanceDay {
+  id           String       @id @default(uuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id])
+  date         DateTime     @db.Date
+  totalHours   Decimal?     @db.Decimal(6, 2)
+  status       DayStatus    @default(IN_PROGRESS)
+  editedByAdmin Boolean     @default(false)
+  notes        String?      @db.Text
+  punchEntries PunchEntry[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([userId, date])
+  @@map("attendance_days")
+}
+
+// Each punch-in / punch-out pair within a day
+model PunchEntry {
+  id              String        @id @default(uuid())
+  dayId           String
+  day             AttendanceDay @relation(fields: [dayId], references: [id])
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  sequence        Int           // 1, 2, 3 … order within the day
+  punchInTime     DateTime
+  punchInLat      Decimal       @db.Decimal(10, 8)
+  punchInLng      Decimal       @db.Decimal(11, 8)
+  punchInAddress  String?
+  punchOutTime    DateTime?
+  punchOutLat     Decimal?      @db.Decimal(10, 8)
+  punchOutLng     Decimal?      @db.Decimal(11, 8)
+  punchOutAddress String?
+  entryHours      Decimal?      @db.Decimal(5, 2) // hours for this entry alone
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("punch_entries")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  adminId      String
+  admin        User     @relation("AdminAuditLogs", fields: [adminId], references: [id])
+  targetUserId String?
+  targetUser   User?    @relation("TargetAuditLogs", fields: [targetUserId], references: [id])
+  action       String
+  oldValue     Json?
+  newValue     Json?
+  createdAt    DateTime @default(now())
+
+  @@map("audit_logs")
+}
