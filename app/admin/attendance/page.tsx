@@ -1,7 +1,8 @@
 import { Fragment } from "react";
 import { prisma } from "@/lib/db";
-import { formatTime, formatHours, getStatusColor, getStatusLabel, localMidnight } from "@/lib/utils";
+import { formatTime, toDecimal, getStatusColor, getStatusLabel, localMidnight } from "@/lib/utils";
 import { AttendanceFilters } from "@/components/admin/attendance-filters";
+import { ExportButton } from "@/components/ui/export-button";
 import { format } from "date-fns";
 import { MapPin } from "lucide-react";
 
@@ -42,13 +43,22 @@ export default async function AdminAttendancePage({
   // Find max punch entries per day so we know how many In/Out columns to render
   const maxEntries = days.reduce((m, d) => Math.max(m, d.punchEntries.length), 1);
 
+  const dateStr = format(dateFilter, "yyyy-MM-dd");
+  const agentParam = params.agentId ? `&agentId=${params.agentId}` : "";
+
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">Attendance</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {format(dateFilter, "EEEE, dd MMMM yyyy")}
-        </p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Attendance</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {format(dateFilter, "EEEE, dd MMMM yyyy")}
+          </p>
+        </div>
+        <ExportButton
+          url={`/api/export/attendance?from=${dateStr}&to=${dateStr}${agentParam}`}
+          label="Export to Excel"
+        />
       </div>
 
       <AttendanceFilters
@@ -92,6 +102,9 @@ export default async function AdminAttendancePage({
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                   Status
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                  Edit
                 </th>
               </tr>
             </thead>
@@ -171,10 +184,10 @@ export default async function AdminAttendancePage({
                   })}
 
                   {/* Daily total */}
-                  <td className="px-4 py-3 text-right font-bold text-gray-800 whitespace-nowrap border-l border-gray-200">
+                  <td className="px-4 py-3 text-right font-bold whitespace-nowrap border-l border-gray-200">
                     {d.totalHours ? (
                       <span className={Number(d.totalHours) >= 8 ? "text-green-600" : "text-amber-600"}>
-                        {formatHours(Number(d.totalHours))}
+                        {toDecimal(Number(d.totalHours))}
                       </span>
                     ) : (
                       <span className="text-gray-300">—</span>
@@ -182,11 +195,21 @@ export default async function AdminAttendancePage({
                   </td>
                   {/* Status */}
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(d.status)}`}
-                    >
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(d.status)}`}>
                       {getStatusLabel(d.status)}
                     </span>
+                    {d.editedByAdmin && (
+                      <span className="ml-1.5 text-[10px] text-amber-500 font-medium">(edited)</span>
+                    )}
+                  </td>
+                  {/* Edit link */}
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <a
+                      href={`/admin/attendance/${d.id}`}
+                      className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                    >
+                      Edit →
+                    </a>
                   </td>
                 </tr>
               ))}

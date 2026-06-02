@@ -3,17 +3,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Clock, Users,
-  BarChart2, Map, Settings, MapPin,
+  BarChart2, Map, Settings, MapPin, CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/attendance", label: "Attendance", icon: Clock },
-  { href: "/admin/agents",    label: "Agents",     icon: Users },
-  { href: "/admin/reports",   label: "Reports",    icon: BarChart2 },
-  { href: "/admin/map",       label: "Live Map",   icon: Map },
-  { href: "/admin/settings",  label: "Settings",   icon: Settings },
+  { href: "/admin/dashboard",  label: "Dashboard",       icon: LayoutDashboard },
+  { href: "/admin/attendance", label: "Attendance",       icon: Clock },
+  { href: "/admin/agents",     label: "Agents",           icon: Users },
+  { href: "/admin/reports",    label: "Reports",          icon: BarChart2 },
+  { href: "/admin/monthly",    label: "Monthly Summary",  icon: CalendarDays },
+  { href: "/admin/map",        label: "Live Map",         icon: Map },
+  { href: "/admin/settings",   label: "Settings",         icon: Settings },
 ];
 
 export function AdminSidebar() {

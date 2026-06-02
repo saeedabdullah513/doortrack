@@ -34,6 +34,12 @@ export function calcHours(start: Date, end: Date): number {
   return (end.getTime() - start.getTime()) / (1000 * 60 * 60);
 }
 
+/** Decimal hours: 8h 08m → 8.13 (US timecard standard) */
+export function toDecimal(hours: number | null): string {
+  if (hours === null || hours === undefined) return "";
+  return hours.toFixed(2);
+}
+
 /**
  * Returns UTC midnight for the current LOCAL calendar date (or a given YYYY-MM-DD string).
  *
