@@ -3,7 +3,7 @@ import type { Role } from "@prisma/client";
 
 // Edge-safe config — no Prisma imports. Used by proxy.ts (middleware).
 export const authConfig = {
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   session: { strategy: "jwt" as const, maxAge: 8 * 60 * 60 },
   pages: { signIn: "/login", error: "/login" },
   providers: [],
