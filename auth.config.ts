@@ -1,4 +1,4 @@
-import type { AuthConfig } from "@auth/core";
+import type { NextAuthConfig } from "next-auth";
 import type { Role } from "@prisma/client";
 
 // Edge-safe config — no Prisma imports. Used by proxy.ts (middleware).
@@ -23,4 +23,4 @@ export const authConfig = {
       return session;
     },
   },
-} satisfies AuthConfig;
+} satisfies NextAuthConfig;
