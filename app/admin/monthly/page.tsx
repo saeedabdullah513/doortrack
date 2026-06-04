@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { localMidnight, toDecimal, formatHours, formatDateIso, formatDateMonthLabel, formatDateMonth } from "@/lib/utils";
+import { localMidnight, toDecimal, formatHours, formatDate, formatDateIso, formatDateMonthLabel, formatDateMonth } from "@/lib/utils";
 import { ExportButton } from "@/components/ui/export-button";
 import { MonthNav } from "@/components/admin/month-nav";
 import {
@@ -80,7 +80,6 @@ export default async function MonthlyReportPage({
   });
 
   const grandTotal = stats.reduce((s, a) => s + a.totalHours, 0);
-  const monthParam = formatDateMonth(baseDate);
 
   return (
     <div className="space-y-6">

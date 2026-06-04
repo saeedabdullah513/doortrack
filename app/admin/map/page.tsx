@@ -18,11 +18,10 @@ export default async function AdminMapPage() {
     lat: Number(e.punchInLat),
     lng: Number(e.punchInLng),
     address: e.punchInAddress ?? "",
-      since: formatTime(e.punchInTime),
-    orderBy: { punchInTime: "asc" },
-  });
+    since: formatTime(e.punchInTime),
+  }));
 
-  const routePoints = allEntries.flatMap((e) => {
+  const routePoints = openEntries.flatMap((e) => {
     const pts = [
       {
         id: `in-${e.id}`,
