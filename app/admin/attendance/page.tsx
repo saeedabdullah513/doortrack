@@ -1,8 +1,9 @@
 import { Fragment } from "react";
 import { prisma } from "@/lib/db";
-import { formatDate, formatDateIso, formatTime, toDecimal, getStatusColor, getStatusLabel, localMidnight } from "@/lib/utils";
+import { formatTime, toDecimal, getStatusColor, getStatusLabel, localMidnight } from "@/lib/utils";
 import { AttendanceFilters } from "@/components/admin/attendance-filters";
 import { ExportButton } from "@/components/ui/export-button";
+import { format } from "date-fns";
 import { MapPin } from "lucide-react";
 
 interface SearchParams {
@@ -17,7 +18,7 @@ export default async function AdminAttendancePage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const dateFilter = localMidnight(params.date); // US Central midnight for the selected date
+  const dateFilter = localMidnight(params.date); // local midnight, not UTC
 
   const where: Record<string, unknown> = { date: dateFilter };
   if (params.agentId) where.userId = params.agentId;
@@ -42,7 +43,7 @@ export default async function AdminAttendancePage({
   // Find max punch entries per day so we know how many In/Out columns to render
   const maxEntries = days.reduce((m, d) => Math.max(m, d.punchEntries.length), 1);
 
-  const dateStr = formatDateIso(dateFilter);
+  const dateStr = format(dateFilter, "yyyy-MM-dd");
   const agentParam = params.agentId ? `&agentId=${params.agentId}` : "";
 
   return (
@@ -51,7 +52,7 @@ export default async function AdminAttendancePage({
         <div>
           <h1 className="text-xl font-bold text-gray-900">Attendance</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {formatDate(dateFilter)}
+            {format(dateFilter, "EEEE, dd MMMM yyyy")}
           </p>
         </div>
         <ExportButton
@@ -62,7 +63,7 @@ export default async function AdminAttendancePage({
 
       <AttendanceFilters
         agents={agents}
-        selectedDate={formatDateIso(dateFilter)}
+        selectedDate={format(dateFilter, "yyyy-MM-dd")}
         selectedAgent={params.agentId ?? ""}
         selectedStatus={params.status ?? ""}
       />
@@ -121,7 +122,7 @@ export default async function AdminAttendancePage({
               {days.map((d) => (
                 <tr key={d.id} className="hover:bg-gray-50/60">
                   <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap font-medium">
-                    {formatDate(d.date)}
+                    {format(d.date, "EEE MM-dd-yyyy")}
                   </td>
                   <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">
                     {d.user.name}

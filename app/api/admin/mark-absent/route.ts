@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { centralDaysAgo, localMidnight } from "@/lib/utils";
+import { localMidnight } from "@/lib/utils";
+import { subDays } from "date-fns";
 
 // Marks agents who never punched in as ABSENT for yesterday.
 // Call via: GET /api/admin/mark-absent
@@ -12,7 +13,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const yesterday = centralDaysAgo(1);
+  const yesterday = localMidnight(
+    subDays(new Date(), 1).toISOString().slice(0, 10)
+  );
 
   const agents = await prisma.user.findMany({
     where: { role: "AGENT", isActive: true },

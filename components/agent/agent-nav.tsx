@@ -1,14 +1,13 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Clock, History, User } from "lucide-react";
+import { LayoutDashboard, Clock, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/agent/dashboard",  label: "Home",       icon: LayoutDashboard },
   { href: "/agent/attendance", label: "Attendance",  icon: Clock },
   { href: "/agent/history",    label: "History",     icon: History },
-  { href: "/agent/settings",   label: "Settings",    icon: User },
 ];
 
 export function AgentNav() {

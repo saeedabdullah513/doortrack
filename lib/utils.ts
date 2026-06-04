@@ -5,33 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const CENTRAL_TIMEZONE = "America/Chicago";
-
-function centralDateParts(date: Date) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: CENTRAL_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "short",
-  }).formatToParts(date);
-
-  const year = parts.find((p) => p.type === "year")?.value ?? "";
-  const month = parts.find((p) => p.type === "month")?.value ?? "";
-  const day = parts.find((p) => p.type === "day")?.value ?? "";
-  return { year, month, day };
-}
-
-function formatCentral(date: Date | string, options: Intl.DateTimeFormatOptions) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: CENTRAL_TIMEZONE,
-    ...options,
-  }).format(new Date(date));
-}
-
 export function formatTime(date: Date | string | null): string {
   if (!date) return "—";
-  return formatCentral(date, {
+  return new Date(date).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
@@ -39,37 +15,10 @@ export function formatTime(date: Date | string | null): string {
 }
 
 export function formatDate(date: Date | string): string {
-  return formatCentral(date, {
+  return new Date(date).toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "2-digit",
-    year: "numeric",
-  });
-}
-
-export function formatDateIso(date: Date | string): string {
-  const parts = centralDateParts(new Date(date));
-  return `${parts.year}-${parts.month}-${parts.day}`;
-}
-
-export function formatDateMonthDay(date: Date | string): string {
-  const parts = centralDateParts(new Date(date));
-  return `${parts.month}${parts.day}`;
-}
-
-export function formatDateSlash(date: Date | string): string {
-  const parts = centralDateParts(new Date(date));
-  return `${parts.month}/${parts.day}/${parts.year}`;
-}
-
-export function formatDateMonth(date: Date | string): string {
-  const parts = centralDateParts(new Date(date));
-  return `${parts.year}-${parts.month}`;
-}
-
-export function formatDateMonthLabel(date: Date | string): string {
-  return formatCentral(date, {
-    month: "long",
     year: "numeric",
   });
 }
@@ -92,25 +41,22 @@ export function toDecimal(hours: number | null): string {
 }
 
 /**
- * Returns UTC midnight for the current US Central calendar date,
- * or for the given YYYY-MM-DD central date string.
+ * Returns UTC midnight for the current LOCAL calendar date (or a given YYYY-MM-DD string).
  *
  * Prisma serialises DateTime → MySQL DATE using the UTC date component.
- * Passing a UTC midnight timestamp for the target Central calendar date
- * preserves the intended date when Prisma writes the DATE value.
+ * So we must always pass UTC midnight of the local calendar date —
+ * never `new Date(y, m, d)` (local midnight) which Prisma would write
+ * as the PREVIOUS calendar date in UTC+5 or later timezones.
  */
 export function localMidnight(dateStr?: string): Date {
   if (dateStr) {
     return new Date(`${dateStr}T00:00:00.000Z`);
   }
-  const parts = centralDateParts(new Date());
-  return new Date(`${parts.year}-${parts.month}-${parts.day}T00:00:00.000Z`);
-}
-
-export function centralDaysAgo(days: number): Date {
-  const date = localMidnight();
-  date.setUTCDate(date.getUTCDate() - days);
-  return date;
+  const n = new Date();
+  const y = n.getFullYear();
+  const m = String(n.getMonth() + 1).padStart(2, "0");
+  const d = String(n.getDate()).padStart(2, "0");
+  return new Date(`${y}-${m}-${d}T00:00:00.000Z`);
 }
 
 export function getStatusLabel(status: string): string {

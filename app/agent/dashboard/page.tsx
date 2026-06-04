@@ -1,12 +1,14 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatTime, formatHours, localMidnight, formatDate } from "@/lib/utils";
+import { formatTime, formatHours, localMidnight } from "@/lib/utils";
 import { APP_CONFIG } from "@/lib/config";
 import { AgentDashboardClient } from "@/components/agent/agent-dashboard-client";
+import { format } from "date-fns";
 
 export default async function AgentDashboardPage() {
   const session = await auth();
   const userId = session!.user.id;
+  const today = new Date();
   const todayDate = localMidnight();
 
   const day = await prisma.attendanceDay.findUnique({
@@ -42,7 +44,7 @@ export default async function AgentDashboardPage() {
   return (
     <AgentDashboardClient
       userName={session!.user.name}
-      today={formatDate(todayDate)}
+      today={format(today, "EEE, dd MMM yyyy")}
       totalHours={totalHours ? formatHours(totalHours) : null}
       targetHours={targetHours}
       progressPct={progressPct}

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { AttendanceEditForm } from "@/components/admin/attendance-edit-form";
-import { formatDate } from "@/lib/utils";
+import { format } from "date-fns";
 
 export default async function AttendanceEditPage({
   params,
@@ -31,7 +31,7 @@ export default async function AttendanceEditPage({
       <div>
         <h1 className="text-xl font-bold text-gray-900">Edit Attendance</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          {day.user.name} · {formatDate(day.date)}
+          {day.user.name} · {format(day.date, "EEEE, dd MMMM yyyy")}
         </p>
       </div>
       <AttendanceEditForm

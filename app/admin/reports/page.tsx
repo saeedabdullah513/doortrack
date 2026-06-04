@@ -1,16 +1,11 @@
 import { Fragment } from "react";
 import { prisma } from "@/lib/db";
 import {
-  formatTime,
-  formatDate,
-  formatDateIso,
-  toDecimal,
-  getStatusColor,
-  getStatusLabel,
+  formatTime, toDecimal, getStatusColor, getStatusLabel,
   localMidnight,
-  centralDaysAgo,
 } from "@/lib/utils";
 import { ExportButton } from "@/components/ui/export-button";
+import { subDays, format } from "date-fns";
 
 interface SearchParams { agentId?: string; from?: string; to?: string }
 
@@ -20,8 +15,8 @@ export default async function AdminReportsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params  = await searchParams;
-  const from    = localMidnight(params.from ?? formatDateIso(centralDaysAgo(30)));
-  const to      = localMidnight(params.to   ?? formatDateIso(localMidnight()));
+  const from    = localMidnight(params.from ?? format(subDays(new Date(), 30), "yyyy-MM-dd"));
+  const to      = localMidnight(params.to   ?? format(new Date(), "yyyy-MM-dd"));
   to.setHours(23, 59, 59, 999);
 
   const agents = await prisma.user.findMany({
@@ -60,8 +55,8 @@ export default async function AdminReportsPage({
   // Running period totals per agent (resets per agent group)
   const periodRunning: Record<string, number> = {};
 
-  const fromStr    = formatDateIso(from);
-  const toStr      = formatDateIso(to);
+  const fromStr    = format(from, "yyyy-MM-dd");
+  const toStr      = format(to,   "yyyy-MM-dd");
   const agentParam = params.agentId ? `&agentId=${params.agentId}` : "";
   const exportBase = `?from=${fromStr}&to=${toStr}${agentParam}`;
 
@@ -72,7 +67,7 @@ export default async function AdminReportsPage({
         <div>
           <h1 className="text-xl font-bold text-gray-900">Reports</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {formatDate(from)} – {formatDate(to)}
+            {format(from, "MMM dd")} – {format(to, "MMM dd, yyyy")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -86,12 +81,12 @@ export default async function AdminReportsPage({
       <form className="flex flex-wrap gap-3 bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-500">From</label>
-          <input name="from" type="date" defaultValue={formatDateIso(from)}
+          <input name="from" type="date" defaultValue={format(from, "yyyy-MM-dd")}
             className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-500">To</label>
-          <input name="to" type="date" defaultValue={formatDateIso(to)}
+          <input name="to" type="date" defaultValue={format(to, "yyyy-MM-dd")}
             className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
         </div>
         <div className="flex flex-col gap-1">
@@ -115,7 +110,7 @@ export default async function AdminReportsPage({
           {summaries.map((s) => (
             <div key={s.name} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <p className="font-bold text-gray-800">{s.name}</p>
-              <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-center">
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                 <div>
                   <p className="text-lg font-extrabold text-gray-900">{s.totalDays}</p>
                   <p className="text-[10px] text-gray-400 uppercase tracking-wide mt-0.5">Days</p>
@@ -201,7 +196,7 @@ export default async function AdminReportsPage({
                     {/* Date */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`text-xs font-semibold ${hasPunches ? "text-red-600" : "text-gray-400"}`}>
-                        {formatDate(d.date)}
+                        {format(d.date, "EEE MM-dd-yyyy")}
                       </span>
                     </td>
 

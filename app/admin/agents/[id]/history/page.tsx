@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
-import { formatHours, formatTime, getStatusColor, getStatusLabel, formatDate, centralDaysAgo } from "@/lib/utils";
+import { formatHours, formatTime, getStatusColor, getStatusLabel } from "@/lib/utils";
+import { format, subDays } from "date-fns";
 import { MapPin, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -17,7 +18,7 @@ export default async function AgentHistoryPage({
   if (!agent) notFound();
 
   const days = await prisma.attendanceDay.findMany({
-    where: { userId: id, date: { gte: centralDaysAgo(30) } },
+    where: { userId: id, date: { gte: subDays(new Date(), 30) } },
     include: { punchEntries: { orderBy: { sequence: "asc" } } },
     orderBy: { date: "desc" },
   });
@@ -40,7 +41,7 @@ export default async function AgentHistoryPage({
       </div>
 
       {/* 30-day summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {[
           { label: "Working Days", value: totalDays },
           { label: "Total Hours", value: formatHours(totalHours) },
@@ -66,7 +67,7 @@ export default async function AgentHistoryPage({
             <div key={d.id} className="px-5 py-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="font-semibold text-gray-800 text-sm">
-                  {formatDate(d.date)}
+                  {format(d.date, "EEE, MMM dd yyyy")}
                 </p>
                 <div className="flex items-center gap-2">
                   {d.totalHours && (
@@ -81,7 +82,7 @@ export default async function AgentHistoryPage({
               </div>
               <div className="space-y-2">
                 {d.punchEntries.map((e) => (
-                  <div key={e.id} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div key={e.id} className="grid grid-cols-2 gap-3 text-xs">
                     <div className="bg-emerald-50 rounded-lg px-3 py-2 flex items-start gap-2">
                       <MapPin className="w-3 h-3 text-emerald-500 flex-shrink-0 mt-0.5" />
                       <div>

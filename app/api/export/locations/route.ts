@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { buildWorkbook, xlsxResponse } from "@/lib/excel";
-import { formatDate, formatTime, formatDateIso, formatDateMonthDay, localMidnight, centralDaysAgo } from "@/lib/utils";
+import { localMidnight } from "@/lib/utils";
+import { format, subDays } from "date-fns";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -11,8 +12,8 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = req.nextUrl;
-  const from    = localMidnight(searchParams.get("from") ?? formatDateIso(centralDaysAgo(30)));
-  const to      = localMidnight(searchParams.get("to")   ?? formatDateIso(localMidnight()));
+  const from    = localMidnight(searchParams.get("from") ?? format(subDays(new Date(), 30), "yyyy-MM-dd"));
+  const to      = localMidnight(searchParams.get("to")   ?? format(new Date(), "yyyy-MM-dd"));
   const agentId = searchParams.get("agentId") ?? undefined;
   to.setHours(23, 59, 59, 999);
 
@@ -32,14 +33,14 @@ export async function GET(req: NextRequest) {
 
   const rows = entries.flatMap((e) => {
     const base = {
-      "Date":    formatDate(e.day.date),
+      "Date":    format(e.day.date, "EEE MM/dd/yyyy"),
       "Agent":   e.user.name,
       "Session": e.sequence,
     };
     const inRow = {
       ...base,
       "Event":     "PUNCH IN",
-      "Time":      formatTime(e.punchInTime),
+      "Time":      format(e.punchInTime, "hh:mm a"),
       "Address":   e.punchInAddress ?? "",
       "Latitude":  Number(e.punchInLat).toFixed(6),
       "Longitude": Number(e.punchInLng).toFixed(6),
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
     const outRow = {
       ...base,
       "Event":     "PUNCH OUT",
-      "Time":      formatTime(e.punchOutTime),
+      "Time":      format(e.punchOutTime, "hh:mm a"),
       "Address":   e.punchOutAddress ?? "",
       "Latitude":  Number(e.punchOutLat).toFixed(6),
       "Longitude": Number(e.punchOutLng).toFixed(6),
@@ -59,6 +60,6 @@ export async function GET(req: NextRequest) {
   });
 
   const buf = buildWorkbook([{ name: "Location Activity", rows }]);
-  const dateRange = `${formatDateMonthDay(from)}-${formatDateMonthDay(to)}`;
+  const dateRange = `${format(from, "MMdd")}-${format(to, "MMdd")}`;
   return xlsxResponse(buf, `DoorTrack_Locations_${dateRange}.xlsx`);
 }

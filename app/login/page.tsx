@@ -139,7 +139,7 @@ export default function LoginPage() {
 
           <p className="text-center text-gray-400 text-xs mt-5">
             Forgot your password?{" "}
-            <a href="/forgot-password" className="text-red-600 font-medium hover:underline">Reset it here.</a>
+            <span className="text-gray-500 font-medium">Contact your administrator.</span>
           </p>
         </div>
       </div>
