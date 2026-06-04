@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { buildWorkbook, xlsxResponse } from "@/lib/excel";
-import { localMidnight, toDecimal, formatHours, getStatusLabel } from "@/lib/utils";
-import { startOfMonth, endOfMonth, getDaysInMonth, format } from "date-fns";
+import { formatDate, formatDateIso, formatDateMonth, formatDateMonthLabel, localMidnight, toDecimal, formatHours, getStatusLabel } from "@/lib/utils";
+import { startOfMonth, endOfMonth, getDaysInMonth, subMonths, addMonths } from "date-fns";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -12,16 +12,15 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = req.nextUrl;
-  const monthParam = searchParams.get("month") ?? format(new Date(), "yyyy-MM");
-  const [y, m]     = monthParam.split("-").map(Number);
-  const baseDate   = new Date(y, m - 1, 1);
+  const monthParam = searchParams.get("month") ?? formatDateMonth(localMidnight());
+  const baseDate   = localMidnight(`${monthParam}-01`);
 
-  const monthStart = localMidnight(format(startOfMonth(baseDate), "yyyy-MM-dd"));
-  const monthEnd   = localMidnight(format(endOfMonth(baseDate),   "yyyy-MM-dd"));
+  const monthStart = localMidnight(formatDateIso(startOfMonth(baseDate)));
+  const monthEnd   = localMidnight(formatDateIso(endOfMonth(baseDate)));
   monthEnd.setHours(23, 59, 59, 999);
 
   const totalDays = getDaysInMonth(baseDate);
-  const monthLabel = format(baseDate, "MMMM yyyy");
+  const monthLabel = formatDateMonthLabel(baseDate);
 
   const agents = await prisma.user.findMany({
     where: { role: "AGENT", isActive: true },
@@ -69,7 +68,7 @@ export async function GET(req: NextRequest) {
     const h = d.totalHours ? Number(d.totalHours) : 0;
     running[d.userId] = (running[d.userId] ?? 0) + h;
     return {
-      "Date":           format(d.date, "EEE MM/dd/yyyy"),
+      "Date":           formatDate(d.date),
       "Agent":          d.user.name,
       "Daily Total":    h > 0 ? toDecimal(h) : "",
       "Period Total":   running[d.userId] > 0 ? toDecimal(running[d.userId]) : "",
@@ -79,7 +78,7 @@ export async function GET(req: NextRequest) {
   });
 
   const buf = buildWorkbook([
-    { name: `${format(baseDate, "MMM yyyy")} Summary`, rows: summaryRows },
+    { name: `${formatDateMonthLabel(baseDate)} Summary`, rows: summaryRows },
     { name: "Daily Detail",                            rows: detailRows  },
   ]);
 

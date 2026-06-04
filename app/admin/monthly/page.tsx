@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db";
-import { localMidnight, toDecimal, formatHours } from "@/lib/utils";
+import { localMidnight, toDecimal, formatHours, formatDateIso, formatDateMonthLabel, formatDateMonth } from "@/lib/utils";
 import { ExportButton } from "@/components/ui/export-button";
 import { MonthNav } from "@/components/admin/month-nav";
 import {
   startOfMonth, endOfMonth, getDaysInMonth,
-  format, subMonths, addMonths,
+  subMonths, addMonths,
 } from "date-fns";
 
 interface SearchParams { month?: string }   // "2026-06"
@@ -17,22 +17,19 @@ export default async function MonthlyReportPage({
   const params = await searchParams;
 
   // Parse month param ("2026-06") or default to current month
-  let baseDate = new Date();
-  if (params.month) {
-    const [y, m] = params.month.split("-").map(Number);
-    baseDate = new Date(y, m - 1, 1);
-  }
+  const monthParam = params.month ?? formatDateMonth(localMidnight());
+  const baseDate = localMidnight(`${monthParam}-01`);
 
-  const monthStart = localMidnight(format(startOfMonth(baseDate), "yyyy-MM-dd"));
-  const monthEnd   = localMidnight(format(endOfMonth(baseDate),   "yyyy-MM-dd"));
+  const monthStart = localMidnight(formatDateIso(startOfMonth(baseDate)));
+  const monthEnd   = localMidnight(formatDateIso(endOfMonth(baseDate)));
   monthEnd.setHours(23, 59, 59, 999);
 
   const totalCalendarDays  = getDaysInMonth(baseDate);
-  const monthLabel         = format(baseDate, "MMMM yyyy");
-  const prevMonth          = format(subMonths(baseDate, 1), "yyyy-MM");
-  const nextMonth          = format(addMonths(baseDate, 1), "yyyy-MM");
-  const currentMonth       = format(new Date(), "yyyy-MM");
-  const isCurrentMonth     = format(baseDate, "yyyy-MM") === currentMonth;
+  const monthLabel         = formatDateMonthLabel(baseDate);
+  const prevMonth          = formatDateMonth(subMonths(baseDate, 1));
+  const nextMonth          = formatDateMonth(addMonths(baseDate, 1));
+  const currentMonth       = formatDateMonth(localMidnight());
+  const isCurrentMonth     = formatDateMonth(baseDate) === currentMonth;
 
   // All agents
   const agents = await prisma.user.findMany({
@@ -61,9 +58,9 @@ export default async function MonthlyReportPage({
     const avgHours     = workingDays > 0 ? totalHours / workingDays : 0;
 
     // Days not yet recorded (no record at all) — only meaningful for past days
-    const today        = new Date();
+    const today        = localMidnight();
     const daysElapsed  = isCurrentMonth
-      ? Math.min(today.getDate(), totalCalendarDays)
+      ? Math.min(today.getUTCDate(), totalCalendarDays)
       : totalCalendarDays;
     const unrecorded   = daysElapsed - agentDays.length;
 
@@ -83,7 +80,7 @@ export default async function MonthlyReportPage({
   });
 
   const grandTotal = stats.reduce((s, a) => s + a.totalHours, 0);
-  const monthParam = format(baseDate, "yyyy-MM");
+  const monthParam = formatDateMonth(baseDate);
 
   return (
     <div className="space-y-6">
@@ -119,7 +116,7 @@ export default async function MonthlyReportPage({
           { label: "Total Hours",     value: toDecimal(grandTotal) + "h",        color: "text-red-600",   bg: "bg-red-50" },
           { label: "Calendar Days",   value: totalCalendarDays,                  color: "text-gray-700",  bg: "bg-gray-50" },
           { label: isCurrentMonth ? "Days So Far" : "Days in Month",
-                                      value: isCurrentMonth ? new Date().getDate() : totalCalendarDays,
+                                      value: isCurrentMonth ? localMidnight().getUTCDate() : totalCalendarDays,
                                                                                  color: "text-emerald-600", bg: "bg-emerald-50" },
         ].map((c) => (
           <div key={c.label} className={`${c.bg} rounded-2xl border border-gray-100 shadow-sm p-5`}>
@@ -294,7 +291,7 @@ export default async function MonthlyReportPage({
                   return (
                     <tr key={d.id} className="hover:bg-gray-50/60">
                       <td className="px-4 py-3 text-xs font-semibold text-gray-600 whitespace-nowrap">
-                        {format(d.date, "EEE, MM/dd/yyyy")}
+                        {formatDate(d.date)}
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-800">{d.user.name}</td>
                       <td className="px-4 py-3 text-right">

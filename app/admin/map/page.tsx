@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
 import { LiveMapClient } from "@/components/admin/live-map-client";
-import { localMidnight } from "@/lib/utils";
-import { format } from "date-fns";
+import { formatTime, localMidnight } from "@/lib/utils";
 
 export default async function AdminMapPage() {
   const today = localMidnight();
@@ -19,13 +18,7 @@ export default async function AdminMapPage() {
     lat: Number(e.punchInLat),
     lng: Number(e.punchInLng),
     address: e.punchInAddress ?? "",
-    since: format(e.punchInTime, "hh:mm a"),
-  }));
-
-  // All punch entries today for route history
-  const allEntries = await prisma.punchEntry.findMany({
-    where: { day: { date: today } },
-    include: { user: { select: { name: true } } },
+      since: formatTime(e.punchInTime),
     orderBy: { punchInTime: "asc" },
   });
 
@@ -37,7 +30,7 @@ export default async function AdminMapPage() {
         lat: Number(e.punchInLat),
         lng: Number(e.punchInLng),
         type: "IN" as "IN" | "OUT",
-        time: format(e.punchInTime, "hh:mm a"),
+        time: formatTime(e.punchInTime),
         address: e.punchInAddress ?? "",
       },
     ];
@@ -48,7 +41,7 @@ export default async function AdminMapPage() {
         lat: Number(e.punchOutLat),
         lng: Number(e.punchOutLng),
         type: "OUT" as const,
-        time: format(e.punchOutTime, "hh:mm a"),
+        time: formatTime(e.punchOutTime),
         address: e.punchOutAddress ?? "",
       });
     }

@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const links = [
+export const adminLinks = [
   { href: "/admin/dashboard",  label: "Dashboard",       icon: LayoutDashboard },
   { href: "/admin/attendance", label: "Attendance",       icon: Clock },
   { href: "/admin/agents",     label: "Agents",           icon: Users },
@@ -20,7 +20,7 @@ const links = [
 export function AdminSidebar() {
   const pathname = usePathname();
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 shadow-sm">
+    <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 shadow-sm">
 
       {/* ── Logo ── */}
       <div className="px-5 py-6 border-b border-gray-100">
@@ -40,7 +40,7 @@ export function AdminSidebar() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-2">
           Main Menu
         </p>
-        {links.map(({ href, label, icon: Icon }) => {
+        {adminLinks.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
