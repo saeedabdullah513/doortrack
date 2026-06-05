@@ -9,14 +9,14 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
 
-  // Always pass through auth API — never intercept these
-  if (pathname.startsWith("/api/auth")) {
+  // Always pass through auth-related APIs — never intercept these
+  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/forgot-password") || pathname.startsWith("/api/reset-password/")) {
     return NextResponse.next();
   }
 
-  // Login page: redirect to dashboard if already logged in
-  if (pathname === "/login") {
-    if (session) {
+  // Public pages: pass through without auth
+  if (pathname === "/login" || pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password/")) {
+    if (session && pathname === "/login") {
       const dest =
         session.user.role === "AGENT" ? "/agent/dashboard" : "/admin/dashboard";
       return NextResponse.redirect(new URL(dest, req.url));

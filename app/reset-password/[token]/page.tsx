@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -12,11 +13,6 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [origin, setOrigin] = useState("");
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -88,13 +84,8 @@ export default function ResetPasswordPage() {
         )}
 
         <p className="text-sm text-gray-500">
-          Need to request another reset? <a href="/forgot-password" className="text-red-600 hover:underline">Send again</a>.
+          Need to request another reset? <Link href="/forgot-password" className="text-red-600 hover:underline">Send again</Link>.
         </p>
-        {origin && token && (
-          <p className="text-xs text-gray-400 break-all">
-            Current reset link: {origin}/reset-password/{token}
-          </p>
-        )}
       </div>
     </div>
   );

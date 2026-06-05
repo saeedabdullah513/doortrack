@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { randomBytes } from "crypto";
 import { z } from "zod";
+import { sendPasswordResetEmail } from "@/lib/mail";
 
 const schema = z.object({
   email: z.string().email(),
@@ -18,8 +19,8 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user) {
-    const token = randomBytes(24).toString("hex");
-    const expires = new Date(Date.now() + 1000 * 60 * 30);
+    const token = randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 1000 * 60 * 60);
 
     await prisma.user.update({
       where: { id: user.id },
@@ -29,8 +30,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ ok: true, resetUrl: `/reset-password/${token}` });
+    // Send email in background — don't block response
+    sendPasswordResetEmail(email, token);
   }
 
+  // Always return the same response regardless of whether the email exists
   return NextResponse.json({ ok: true });
 }
