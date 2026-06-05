@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/db";
 import { StatCard } from "@/components/ui/stat-card";
-import { formatTime, formatHours, getStatusColor, getStatusLabel, localMidnight } from "@/lib/utils";
+import { formatTime, formatHours, getStatusColor, getStatusLabel, localMidnight, formatDate } from "@/lib/utils";
 import { Users, UserCheck, TrendingDown, AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
 import Link from "next/link";
 
 export default async function AdminDashboardPage() {
@@ -32,7 +31,7 @@ export default async function AdminDashboardPage() {
       <div>
         <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          {format(new Date(), "EEEE, dd MMMM yyyy")}
+          {formatDate(localMidnight())}
         </p>
       </div>
 

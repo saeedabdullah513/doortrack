@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { buildWorkbook, xlsxResponse } from "@/lib/excel";
-import { localMidnight } from "@/lib/utils";
-import { format, subDays } from "date-fns";
+import { centralDaysAgo, formatDateIso, formatDateMonthDay, formatDateSlash, localMidnight } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -12,8 +11,8 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = req.nextUrl;
-  const from = localMidnight(searchParams.get("from") ?? format(subDays(new Date(), 30), "yyyy-MM-dd"));
-  const to   = localMidnight(searchParams.get("to")   ?? format(new Date(), "yyyy-MM-dd"));
+  const from = localMidnight(searchParams.get("from") ?? formatDateIso(centralDaysAgo(30)));
+  const to   = localMidnight(searchParams.get("to")   ?? formatDateIso(localMidnight()));
   to.setHours(23, 59, 59, 999);
 
   const days = await prisma.attendanceDay.findMany({
@@ -59,10 +58,10 @@ export async function GET(req: NextRequest) {
     "Days ≥ 8h (Target Met)": a.dailyHours.filter((h) => h >= 8).length,
     "Days < 8h (Below Target)": a.belowTarget,
     "Absent Days":       a.absent,
-    "Period":            `${format(from, "MM/dd/yyyy")} – ${format(to, "MM/dd/yyyy")}`,
+    "Period":            `${formatDateSlash(from)} – ${formatDateSlash(to)}`,
   }));
 
   const buf = buildWorkbook([{ name: "Agent Summary", rows: summaryRows }]);
-  const dateRange = `${format(from, "MMdd")}-${format(to, "MMdd")}`;
+  const dateRange = `${formatDateMonthDay(from)}-${formatDateMonthDay(to)}`;
   return xlsxResponse(buf, `DoorTrack_AgentSummary_${dateRange}.xlsx`);
 }

@@ -1,11 +1,16 @@
 import { Fragment } from "react";
 import { prisma } from "@/lib/db";
 import {
-  formatTime, toDecimal, getStatusColor, getStatusLabel,
+  formatTime,
+  formatDate,
+  formatDateIso,
+  toDecimal,
+  getStatusColor,
+  getStatusLabel,
   localMidnight,
+  centralDaysAgo,
 } from "@/lib/utils";
 import { ExportButton } from "@/components/ui/export-button";
-import { subDays, format } from "date-fns";
 
 interface SearchParams { agentId?: string; from?: string; to?: string }
 
@@ -15,8 +20,8 @@ export default async function AdminReportsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params  = await searchParams;
-  const from    = localMidnight(params.from ?? format(subDays(new Date(), 30), "yyyy-MM-dd"));
-  const to      = localMidnight(params.to   ?? format(new Date(), "yyyy-MM-dd"));
+  const from    = localMidnight(params.from ?? formatDateIso(centralDaysAgo(30)));
+  const to      = localMidnight(params.to   ?? formatDateIso(localMidnight()));
   to.setHours(23, 59, 59, 999);
 
   const agents = await prisma.user.findMany({
@@ -55,8 +60,8 @@ export default async function AdminReportsPage({
   // Running period totals per agent (resets per agent group)
   const periodRunning: Record<string, number> = {};
 
-  const fromStr    = format(from, "yyyy-MM-dd");
-  const toStr      = format(to,   "yyyy-MM-dd");
+  const fromStr    = formatDateIso(from);
+  const toStr      = formatDateIso(to);
   const agentParam = params.agentId ? `&agentId=${params.agentId}` : "";
   const exportBase = `?from=${fromStr}&to=${toStr}${agentParam}`;
 
@@ -67,7 +72,7 @@ export default async function AdminReportsPage({
         <div>
           <h1 className="text-xl font-bold text-gray-900">Reports</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {format(from, "MMM dd")} – {format(to, "MMM dd, yyyy")}
+            {formatDate(from)} – {formatDate(to)}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -81,12 +86,12 @@ export default async function AdminReportsPage({
       <form className="flex flex-wrap gap-3 bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-500">From</label>
-          <input name="from" type="date" defaultValue={format(from, "yyyy-MM-dd")}
+          <input name="from" type="date" defaultValue={formatDateIso(from)}
             className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-500">To</label>
-          <input name="to" type="date" defaultValue={format(to, "yyyy-MM-dd")}
+          <input name="to" type="date" defaultValue={formatDateIso(to)}
             className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
         </div>
         <div className="flex flex-col gap-1">
@@ -196,7 +201,7 @@ export default async function AdminReportsPage({
                     {/* Date */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`text-xs font-semibold ${hasPunches ? "text-red-600" : "text-gray-400"}`}>
-                        {format(d.date, "EEE MM-dd-yyyy")}
+                        {formatDate(d.date)}
                       </span>
                     </td>
 

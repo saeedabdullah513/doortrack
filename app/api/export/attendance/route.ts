@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { buildWorkbook, xlsxResponse } from "@/lib/excel";
-import { localMidnight, formatHours, getStatusLabel } from "@/lib/utils";
-import { format, subDays } from "date-fns";
+import { centralDaysAgo, formatDate, formatDateIso, formatDateMonthDay, formatHours, formatTime, getStatusLabel, localMidnight } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -12,8 +11,8 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = req.nextUrl;
-  const from    = localMidnight(searchParams.get("from") ?? format(subDays(new Date(), 30), "yyyy-MM-dd"));
-  const to      = localMidnight(searchParams.get("to")   ?? format(new Date(), "yyyy-MM-dd"));
+  const from    = localMidnight(searchParams.get("from") ?? formatDateIso(centralDaysAgo(30)));
+  const to      = localMidnight(searchParams.get("to")   ?? formatDateIso(localMidnight()));
   const agentId = searchParams.get("agentId") ?? undefined;
   to.setHours(23, 59, 59, 999);
 
@@ -35,17 +34,17 @@ export async function GET(req: NextRequest) {
   // ── Sheet 1: Table-style (matches the admin attendance UI) ──
   const tableRows = days.map((d) => {
     const row: Record<string, string | number> = {
-      "Date":  format(d.date, "EEE MM/dd/yyyy"),
+      "Date":  formatDate(d.date),
       "Agent": d.user.name,
     };
 
     for (let i = 0; i < maxSessions; i++) {
       const n = i + 1;
-      const e = d.punchEntries[i];          // may be undefined if fewer sessions
+      const e = d.punchEntries[i];
 
-      row[`In ${n}`]          = e ? format(new Date(e.punchInTime),  "hh:mm a") : "";
+      row[`In ${n}`]          = e ? formatTime(e.punchInTime) : "";
       row[`In Location ${n}`] = e?.punchInAddress  ?? "";
-      row[`Out ${n}`]         = e?.punchOutTime ? format(new Date(e.punchOutTime), "hh:mm a") : "";
+      row[`Out ${n}`]         = e?.punchOutTime ? formatTime(e.punchOutTime) : "";
       row[`Out Location ${n}`] = e?.punchOutAddress ?? "";
     }
 
@@ -59,15 +58,15 @@ export async function GET(req: NextRequest) {
   // ── Sheet 2: Detailed punch entries (one row per session) ──
   const detailRows = days.flatMap((d) =>
     d.punchEntries.map((e) => ({
-      "Date":          format(d.date, "EEE MM/dd/yyyy"),
+      "Date":          formatDate(d.date),
       "Agent":         d.user.name,
       "Email":         d.user.email,
       "Session #":     e.sequence,
-      "Punch In Time": e.punchInTime  ? format(new Date(e.punchInTime),  "hh:mm a") : "",
+      "Punch In Time": e.punchInTime  ? formatTime(e.punchInTime) : "",
       "In Address":    e.punchInAddress  ?? "",
       "In Latitude":   Number(e.punchInLat).toFixed(6),
       "In Longitude":  Number(e.punchInLng).toFixed(6),
-      "Punch Out Time": e.punchOutTime ? format(new Date(e.punchOutTime), "hh:mm a") : "",
+      "Punch Out Time": e.punchOutTime ? formatTime(e.punchOutTime) : "",
       "Out Address":   e.punchOutAddress ?? "",
       "Out Latitude":  e.punchOutLat ? Number(e.punchOutLat).toFixed(6) : "",
       "Out Longitude": e.punchOutLng ? Number(e.punchOutLng).toFixed(6) : "",
@@ -82,6 +81,6 @@ export async function GET(req: NextRequest) {
     { name: "Punch Detail", rows: detailRows },
   ]);
 
-  const dateRange = `${format(from, "MMdd")}-${format(to, "MMdd")}`;
+  const dateRange = `${formatDateMonthDay(from)}-${formatDateMonthDay(to)}`;
   return xlsxResponse(buf, `DoorTrack_Attendance_${dateRange}.xlsx`);
 }

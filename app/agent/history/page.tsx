@@ -1,8 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatTime, formatDate } from "@/lib/utils";
+import { formatTime, formatDate, centralDaysAgo } from "@/lib/utils";
 import { MapPin } from "lucide-react";
-import { subDays } from "date-fns";
 
 export default async function AgentHistoryPage() {
   const session = await auth();
@@ -11,7 +10,7 @@ export default async function AgentHistoryPage() {
   const entries = await prisma.punchEntry.findMany({
     where: {
       userId,
-      punchInTime: { gte: subDays(new Date(), 7) },
+      punchInTime: { gte: centralDaysAgo(7) },
     },
     orderBy: { punchInTime: "desc" },
     take: 60,

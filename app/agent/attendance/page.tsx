@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatTime, formatHours, getStatusLabel, getStatusColor } from "@/lib/utils";
-import { format, subDays } from "date-fns";
+import { formatTime, formatHours, getStatusLabel, getStatusColor, formatDate, centralDaysAgo } from "@/lib/utils";
 import { MapPin } from "lucide-react";
 
 export default async function AgentAttendancePage() {
@@ -9,7 +8,7 @@ export default async function AgentAttendancePage() {
   const userId = session!.user.id;
 
   const days = await prisma.attendanceDay.findMany({
-    where: { userId, date: { gte: subDays(new Date(), 30) } },
+    where: { userId, date: { gte: centralDaysAgo(30) } },
     include: { punchEntries: { orderBy: { sequence: "asc" } } },
     orderBy: { date: "desc" },
     take: 30,
@@ -38,7 +37,7 @@ export default async function AgentAttendancePage() {
               {/* Day header */}
               <div className="px-4 py-3 flex items-center justify-between border-b border-gray-50">
                 <p className="font-semibold text-gray-800 text-sm">
-                  {format(d.date, "EEE, MMM dd yyyy")}
+                  {formatDate(d.date)}
                 </p>
                 <div className="flex items-center gap-2">
                   {d.totalHours && (

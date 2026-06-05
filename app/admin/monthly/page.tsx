@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { localMidnight, toDecimal, formatHours, formatDate, formatDateIso, formatDateMonthLabel, formatDateMonth } from "@/lib/utils";
+import { localMidnight, toDecimal, formatHours, formatDate, formatDateIso, formatDateMonth, formatDateMonthLabel } from "@/lib/utils";
 import { ExportButton } from "@/components/ui/export-button";
 import { MonthNav } from "@/components/admin/month-nav";
 import {
@@ -21,15 +21,15 @@ export default async function MonthlyReportPage({
   const baseDate = localMidnight(`${monthParam}-01`);
 
   const monthStart = localMidnight(formatDateIso(startOfMonth(baseDate)));
-  const monthEnd   = localMidnight(formatDateIso(endOfMonth(baseDate)));
+  const monthEnd = localMidnight(formatDateIso(endOfMonth(baseDate)));
   monthEnd.setHours(23, 59, 59, 999);
 
-  const totalCalendarDays  = getDaysInMonth(baseDate);
-  const monthLabel         = formatDateMonthLabel(baseDate);
-  const prevMonth          = formatDateMonth(subMonths(baseDate, 1));
-  const nextMonth          = formatDateMonth(addMonths(baseDate, 1));
-  const currentMonth       = formatDateMonth(localMidnight());
-  const isCurrentMonth     = formatDateMonth(baseDate) === currentMonth;
+  const totalCalendarDays = getDaysInMonth(baseDate);
+  const monthLabel = formatDateMonthLabel(baseDate);
+  const prevMonth = formatDateMonth(subMonths(baseDate, 1));
+  const nextMonth = formatDateMonth(addMonths(baseDate, 1));
+  const currentMonth = formatDateMonth(localMidnight());
+  const isCurrentMonth = formatDateMonth(baseDate) === currentMonth;
 
   // All agents
   const agents = await prisma.user.findMany({
