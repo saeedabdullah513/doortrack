@@ -10,6 +10,12 @@ interface Entry {
   punchInTime: string;
   punchOutTime: string | null;
   entryHours: number | null;
+  punchInLat: number;
+  punchInLng: number;
+  punchInAddress: string | null;
+  punchOutLat: number | null;
+  punchOutLng: number | null;
+  punchOutAddress: string | null;
 }
 
 function toLocalInput(iso: string) {
@@ -30,12 +36,15 @@ export function AttendanceEditForm({ dayId, entries: initial, notes: initNotes, 
     ...e,
     punchInTime:  toLocalInput(e.punchInTime),
     punchOutTime: e.punchOutTime ? toLocalInput(e.punchOutTime) : "",
+    punchOutLat:  e.punchOutLat?.toString() ?? "",
+    punchOutLng:  e.punchOutLng?.toString() ?? "",
+    punchOutAddress: e.punchOutAddress ?? "",
   })));
   const [notes, setNotes]   = useState(initNotes);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
 
-  function setField(idx: number, field: "punchInTime" | "punchOutTime", val: string) {
+  function setField(idx: number, field: "punchInTime" | "punchOutTime" | "punchOutLat" | "punchOutLng" | "punchOutAddress", val: string) {
     setEntries((prev) => prev.map((e, i) => i === idx ? { ...e, [field]: val } : e));
   }
 
@@ -45,9 +54,12 @@ export function AttendanceEditForm({ dayId, entries: initial, notes: initNotes, 
     const payload = {
       notes,
       entries: entries.map((e) => ({
-        id:           e.id,
-        punchInTime:  new Date(e.punchInTime).toISOString(),
-        punchOutTime: e.punchOutTime ? new Date(e.punchOutTime).toISOString() : null,
+        id:              e.id,
+        punchInTime:     new Date(e.punchInTime).toISOString(),
+        punchOutTime:    e.punchOutTime ? new Date(e.punchOutTime).toISOString() : null,
+        punchOutLat:     e.punchOutLat ? parseFloat(e.punchOutLat) : undefined,
+        punchOutLng:     e.punchOutLng ? parseFloat(e.punchOutLng) : undefined,
+        punchOutAddress: e.punchOutAddress || undefined,
       })),
     };
     const res = await fetch(`/api/attendance/${dayId}`, {
@@ -92,6 +104,45 @@ export function AttendanceEditForm({ dayId, entries: initial, notes: initNotes, 
                 value={e.punchOutTime ?? ""}
                 onChange={(ev) => setField(i, "punchOutTime", ev.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+          </div>
+
+          {/* Location fields */}
+          <div className="mt-4 border-t border-gray-100 pt-4">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Punch Out Location</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-medium text-gray-600 block mb-1">Latitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={e.punchOutLat}
+                  onChange={(ev) => setField(i, "punchOutLat", ev.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="e.g. 44.84235"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 block mb-1">Longitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={e.punchOutLng}
+                  onChange={(ev) => setField(i, "punchOutLng", ev.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="e.g. -93.07832"
+                />
+              </div>
+            </div>
+            <div className="mt-3">
+              <label className="text-xs font-medium text-gray-600 block mb-1">Address</label>
+              <input
+                type="text"
+                value={e.punchOutAddress}
+                onChange={(ev) => setField(i, "punchOutAddress", ev.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                placeholder="Street, City, State"
               />
             </div>
           </div>

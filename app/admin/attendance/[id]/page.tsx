@@ -19,11 +19,17 @@ export default async function AttendanceEditPage({
   if (!day) notFound();
 
   const entries = day.punchEntries.map((e) => ({
-    id:           e.id,
-    sequence:     e.sequence,
-    punchInTime:  e.punchInTime.toISOString(),
-    punchOutTime: e.punchOutTime?.toISOString() ?? null,
-    entryHours:   e.entryHours ? Number(e.entryHours) : null,
+    id:              e.id,
+    sequence:        e.sequence,
+    punchInTime:     e.punchInTime.toISOString(),
+    punchOutTime:    e.punchOutTime?.toISOString() ?? null,
+    entryHours:      e.entryHours ? Number(e.entryHours) : null,
+    punchInLat:      Number(e.punchInLat),
+    punchInLng:      Number(e.punchInLng),
+    punchInAddress:  e.punchInAddress,
+    punchOutLat:     e.punchOutLat ? Number(e.punchOutLat) : null,
+    punchOutLng:     e.punchOutLng ? Number(e.punchOutLng) : null,
+    punchOutAddress: e.punchOutAddress,
   }));
 
   return (

@@ -7,9 +7,12 @@ import { z } from "zod";
 const schema = z.object({
   notes: z.string().optional(),
   entries: z.array(z.object({
-    id:           z.string(),
-    punchInTime:  z.string(),
-    punchOutTime: z.string().nullable(),
+    id:              z.string(),
+    punchInTime:     z.string(),
+    punchOutTime:    z.string().nullable(),
+    punchOutLat:     z.number().optional(),
+    punchOutLng:     z.number().optional(),
+    punchOutAddress: z.string().optional(),
   })),
 });
 
@@ -39,9 +42,16 @@ export async function PUT(
     const hours   = outTime
       ? (outTime.getTime() - inTime.getTime()) / (1000 * 60 * 60)
       : null;
+
+    // Only include location fields when they've been explicitly provided
+    const locationUpdate: Record<string, unknown> = {};
+    if (e.punchOutLat !== undefined) locationUpdate.punchOutLat = e.punchOutLat;
+    if (e.punchOutLng !== undefined) locationUpdate.punchOutLng = e.punchOutLng;
+    if (e.punchOutAddress !== undefined) locationUpdate.punchOutAddress = e.punchOutAddress;
+
     await prisma.punchEntry.update({
       where: { id: e.id },
-      data: { punchInTime: inTime, punchOutTime: outTime, entryHours: hours },
+      data: { punchInTime: inTime, punchOutTime: outTime, entryHours: hours, ...locationUpdate },
     });
   }
 
