@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Clock, Users,
-  BarChart2, Map, Settings, MapPin, CalendarDays,
+  BarChart2, Map, Settings, MapPin, CalendarDays, FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ export const adminLinks = [
   { href: "/admin/monthly",    label: "Monthly Summary",  icon: CalendarDays },
   { href: "/admin/map",        label: "Live Map",         icon: Map },
   { href: "/admin/settings",   label: "Settings",         icon: Settings },
+  { href: "/admin/sales",      label: "Sales Entry",      icon: FileText },
 ];
 
 export function AdminSidebar() {

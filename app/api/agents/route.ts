@@ -11,6 +11,21 @@ const createSchema = z.object({
   password: z.string().min(6),
 });
 
+export async function GET() {
+  const session = await auth();
+  if (!session || session.user.role === "AGENT") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const agents = await prisma.user.findMany({
+    where: { role: "AGENT", isActive: true },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+
+  return NextResponse.json(agents);
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session || session.user.role === "AGENT") {

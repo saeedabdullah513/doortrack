@@ -36,6 +36,7 @@ model User {
   punchEntries      PunchEntry[]
   auditLogsBy       AuditLog[]     @relation("AdminAuditLogs")
   auditLogsOn       AuditLog[]     @relation("TargetAuditLogs")
+  salesEntries      SalesEntry[]
 
   @@map("users")
 }
@@ -93,4 +94,31 @@ model AuditLog {
   createdAt    DateTime @default(now())
 
   @@map("audit_logs")
+}
+
+model SalesEntry {
+  id              String   @id @default(uuid())
+  agentId         String
+  agent           User     @relation(fields: [agentId], references: [id])
+  agentName       String
+  portal          String
+  provider        String
+  customerName    String
+  customerPhone   String
+  customerAddress String
+  city            String
+  state           String
+  zipCode         String
+  hasMobile       Boolean  @default(false)
+  hasInternet     Boolean  @default(false)
+  hasTv           Boolean  @default(false)
+  hasPhone        Boolean  @default(false)
+  hasHomeSecurity Boolean  @default(false)
+  comments        String?  @db.Text
+  activationStatus String
+  paymentStatus   String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("sales_entries")
 }
