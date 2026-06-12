@@ -176,14 +176,14 @@ export function SalesForm({ agentName }: SalesFormProps) {
               { name: "hasPhone", label: "Phone", icon: "📞" },
               { name: "hasHomeSecurity", label: "Security", icon: "🛡️" },
             ].map((svc) => (
-              <label key={svc.name} className="relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-gray-100 bg-white cursor-pointer transition-all duration-200 has-[:checked]:border-red-300 has-[:checked]:bg-red-50/30 hover:border-gray-200 active:scale-[0.98]">
+              <label key={svc.name} className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 border-gray-100 bg-white cursor-pointer transition-all duration-200 has-[:checked]:border-red-300 has-[:checked]:bg-red-50/30 hover:border-gray-200 active:scale-[0.98]">
                 <input type="checkbox" name={svc.name} className="peer sr-only" />
-                <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-lg flex-shrink-0 peer-checked:bg-red-50 peer-checked:border-red-200 transition-all duration-200">
+                <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-sm flex-shrink-0 peer-checked:bg-red-50 peer-checked:border-red-200 transition-all duration-200">
                   <span>{svc.icon}</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-700 peer-checked:text-red-700 transition-colors duration-200 text-center">{svc.label}</span>
-                <div className="w-5 h-5 rounded-md border-2 border-gray-300 flex items-center justify-center flex-shrink-0 peer-checked:bg-red-500 peer-checked:border-red-500 transition-all duration-200">
-                  <Check size={12} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-200" />
+                <span className="text-xs font-semibold text-gray-700 peer-checked:text-red-700 transition-colors duration-200 text-center">{svc.label}</span>
+                <div className="w-4 h-4 rounded border-2 border-gray-300 flex items-center justify-center flex-shrink-0 peer-checked:bg-red-500 peer-checked:border-red-500 transition-all duration-200">
+                  <Check size={10} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-200" />
                 </div>
               </label>
             ))}
@@ -226,18 +226,18 @@ export function SalesForm({ agentName }: SalesFormProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col-reverse sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <button
           type="button"
           onClick={() => router.back()}
-          className="h-12 px-6 rounded-2xl border-2 border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 active:scale-[0.98]"
+          className="w-full sm:w-auto h-12 px-8 rounded-2xl border-2 border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 active:scale-[0.98]"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="h-12 px-8 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 text-white text-sm font-bold shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:from-red-700 hover:to-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 flex-1 sm:flex-none"
+          className="w-full sm:w-auto h-12 px-8 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 text-white text-sm font-bold shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:from-red-700 hover:to-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 sm:flex-1"
         >
           {submitting ? (
             <>
