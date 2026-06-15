@@ -18,8 +18,8 @@ const createSchema = z.object({
   hasPhone: z.boolean().optional().default(false),
   hasHomeSecurity: z.boolean().optional().default(false),
   comments: z.string().optional(),
-  activationStatus: z.string().min(1),
-  paymentStatus: z.string().min(1),
+  activationStatus: z.string().optional(),
+  paymentStatus: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -34,9 +34,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid data", details: parsed.error.flatten() }, { status: 400 });
   }
 
+  const isAgent = session.user.role === "AGENT";
+
   const sale = await prisma.salesEntry.create({
     data: {
       ...parsed.data,
+      activationStatus: isAgent ? "Pending" : (parsed.data.activationStatus || "Pending"),
+      paymentStatus: isAgent ? "Unpaid" : (parsed.data.paymentStatus || "Unpaid"),
       agentId: session.user.id,
       agentName: session.user.name,
     },

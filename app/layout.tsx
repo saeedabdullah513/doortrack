@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "DoorTrack",
   description: "Door-to-Door Team Attendance & Location Tracking",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

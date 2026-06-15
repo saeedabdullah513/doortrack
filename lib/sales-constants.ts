@@ -1,22 +1,17 @@
 export const PORTALS = [
-  "Residential",
-  "Commercial",
-  "Business",
-  "Government",
-  "Education",
+  "COP",
+  "RSI",
+  "DSI",
 ];
 
 export const PROVIDERS = [
-  "Spectrum",
   "Xfinity",
+  "Quantum Fiber",
   "AT&T",
-  "Verizon",
-  "Cox",
-  "Optimum",
-  "CenturyLink",
   "Frontier",
-  "Mediacom",
-  "Other",
+  "Verizon",
+  "T-Fiber",
+  "Windstream",
 ];
 
 export const US_STATES = [
@@ -27,6 +22,6 @@ export const US_STATES = [
   "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
 ];
 
-export const ACTIVATION_STATUSES = ["Activation", "Non-Active", "Chargeback"];
+export const ACTIVATION_STATUSES = ["Pending", "Active", "Cancel", "Chargeback"];
 
-export const PAYMENT_STATUSES = ["Paid", "Unpaid", "Chargeback", "Refund"];
+export const PAYMENT_STATUSES = ["Unpaid", "100% Paid", "40% Paid", "60% Paid", "100% Chargeback", "60% Chargeback"];
