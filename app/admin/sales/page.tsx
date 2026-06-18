@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/utils";
-import { Pencil, Search, Download } from "lucide-react";
+import { Pencil, Search, Download, Trash2, X, Loader2 } from "lucide-react";
 
 interface Sale {
   id: string;
@@ -25,6 +25,7 @@ interface Sale {
   activationStatus: string;
   paymentStatus: string;
   createdAt: string;
+  saleDate: string;
 }
 
 interface Agent {
@@ -69,6 +70,8 @@ export default function AdminSalesPage() {
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
   const [search, setSearch] = useState("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchSales = useCallback(async () => {
     setLoading(true);
@@ -108,6 +111,17 @@ export default function AdminSalesPage() {
     if (filterTo) params.set("dateTo", filterTo);
 
     window.open(`/api/sales/export?${params.toString()}`, "_blank");
+  }
+
+  async function handleDelete() {
+    if (!deleteId) return;
+    setDeleting(true);
+    const res = await fetch(`/api/sales/${deleteId}`, { method: "DELETE" });
+    if (res.ok) {
+      setSales((prev) => prev.filter((s) => s.id !== deleteId));
+      setDeleteId(null);
+    }
+    setDeleting(false);
   }
 
   const inputClass = "px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 w-full";
@@ -184,7 +198,7 @@ export default function AdminSalesPage() {
                 <th className="px-3 py-3 text-left">Activation</th>
                 <th className="px-3 py-3 text-left">Payment</th>
                 <th className="px-3 py-3 text-left">Comments</th>
-                <th className="px-3 py-3 text-center w-16">Actions</th>
+                <th className="px-3 py-3 text-center w-32">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -255,14 +269,23 @@ export default function AdminSalesPage() {
                       <td className="px-3 py-3 text-gray-400 max-w-[150px] truncate text-xs">
                         {s.comments || "—"}
                       </td>
-                      <td className="px-3 py-3 text-center">
-                        <button
-                          onClick={() => router.push(`/admin/sales/${s.id}`)}
-                          className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 hover:border-gray-300 transition-all"
-                          title="Edit"
-                        >
-                          <Pencil size={14} className="text-gray-500" />
-                        </button>
+                      <td className="px-3 py-3">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => router.push(`/admin/sales/${s.id}`)}
+                            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 hover:border-gray-300 transition-all"
+                            title="Edit"
+                          >
+                            <Pencil size={14} className="text-gray-500" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteId(s.id)}
+                            className="w-8 h-8 rounded-lg border border-red-200 flex items-center justify-center hover:bg-red-50 hover:border-red-300 transition-all"
+                            title="Delete"
+                          >
+                            <Trash2 size={14} className="text-red-400" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -293,19 +316,28 @@ export default function AdminSalesPage() {
 
             return (
               <div key={s.id} className="bg-white rounded-xl border border-gray-100 p-3.5 space-y-2.5 shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-800 text-sm truncate">{s.customerName}</p>
-                    <p className="text-xs text-gray-400">{s.customerPhone}</p>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-800 text-sm truncate">{s.customerName}</p>
+                      <p className="text-xs text-gray-400">{s.customerPhone}</p>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                      <button
+                        onClick={() => router.push(`/admin/sales/${s.id}`)}
+                        className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50"
+                        title="Edit"
+                      >
+                        <Pencil size={13} className="text-gray-500" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteId(s.id)}
+                        className="w-8 h-8 rounded-lg border border-red-200 flex items-center justify-center hover:bg-red-50"
+                        title="Delete"
+                      >
+                        <Trash2 size={13} className="text-red-400" />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => router.push(`/admin/sales/${s.id}`)}
-                    className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 flex-shrink-0 ml-2"
-                    title="Edit"
-                  >
-                    <Pencil size={13} className="text-gray-500" />
-                  </button>
-                </div>
                 <div className="flex items-center gap-1.5 text-xs">
                   <span className="font-medium text-gray-600">{s.agentName}</span>
                   <span className="text-gray-300">·</span>
@@ -354,6 +386,46 @@ export default function AdminSalesPage() {
           })
         )}
       </div>
+      {/* Delete confirmation dialog */}
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => !deleting && setDeleteId(null)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-auto">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <Trash2 size={18} className="text-red-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-gray-900">Delete Sale</h3>
+                <p className="text-sm text-gray-500 mt-1">Are you sure you want to delete this sale? This action cannot be undone.</p>
+              </div>
+              <button onClick={() => setDeleteId(null)} disabled={deleting} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 flex-shrink-0">
+                <X size={16} className="text-gray-400" />
+              </button>
+            </div>
+            <div className="flex gap-2.5 mt-6">
+              <button
+                onClick={() => setDeleteId(null)}
+                disabled={deleting}
+                className="flex-1 h-11 rounded-xl border-2 border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 h-11 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+              >
+                {deleting ? (
+                  <><Loader2 size={16} className="animate-spin" /> Deleting...</>
+                ) : (
+                  "Delete"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
