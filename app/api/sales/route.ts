@@ -17,9 +17,15 @@ const createSchema = z.object({
   hasTv: z.boolean().optional().default(false),
   hasPhone: z.boolean().optional().default(false),
   hasHomeSecurity: z.boolean().optional().default(false),
+  mobileQty: z.number().int().min(0).optional().default(0),
+  internetQty: z.number().int().min(0).optional().default(0),
+  tvQty: z.number().int().min(0).optional().default(0),
+  phoneQty: z.number().int().min(0).optional().default(0),
+  homeSecurityQty: z.number().int().min(0).optional().default(0),
   comments: z.string().optional(),
   activationStatus: z.string().optional(),
   paymentStatus: z.string().optional(),
+  saleDate: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -35,14 +41,16 @@ export async function POST(req: NextRequest) {
   }
 
   const isAgent = session.user.role === "AGENT";
+  const { saleDate, ...data } = parsed.data;
 
   const sale = await prisma.salesEntry.create({
     data: {
-      ...parsed.data,
+      ...data,
       activationStatus: isAgent ? "Pending" : (parsed.data.activationStatus || "Pending"),
       paymentStatus: isAgent ? "Unpaid" : (parsed.data.paymentStatus || "Unpaid"),
       agentId: session.user.id,
       agentName: session.user.name,
+      ...(saleDate ? { saleDate: new Date(saleDate) } : {}),
     },
   });
 
@@ -70,14 +78,14 @@ export async function GET(req: NextRequest) {
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
   if (dateFrom || dateTo) {
-    where.createdAt = {};
-    if (dateFrom) (where.createdAt as Record<string, unknown>).gte = new Date(dateFrom);
-    if (dateTo) (where.createdAt as Record<string, unknown>).lte = new Date(dateTo + "T23:59:59.999Z");
+    where.saleDate = {};
+    if (dateFrom) (where.saleDate as Record<string, unknown>).gte = new Date(dateFrom);
+    if (dateTo) (where.saleDate as Record<string, unknown>).lte = new Date(dateTo + "T23:59:59.999Z");
   }
 
   const sales = await prisma.salesEntry.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: { saleDate: "desc" },
   });
 
   return NextResponse.json(sales);

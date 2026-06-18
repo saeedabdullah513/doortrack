@@ -114,11 +114,27 @@ model SalesEntry {
   hasTv           Boolean  @default(false)
   hasPhone        Boolean  @default(false)
   hasHomeSecurity Boolean  @default(false)
+  mobileQty       Int      @default(0)
+  internetQty     Int      @default(0)
+  tvQty           Int      @default(0)
+  phoneQty        Int      @default(0)
+  homeSecurityQty Int      @default(0)
   comments        String?  @db.Text
   activationStatus String
   paymentStatus   String
+  saleDate        DateTime @default(now()) @db.Date
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@map("sales_entries")
+}
+
+model ProductStock {
+  id          String   @id @default(uuid())
+  productName String   @unique
+  availableQty Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("product_stock")
 }

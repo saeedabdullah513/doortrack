@@ -1,22 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PORTALS, PROVIDERS, US_STATES } from "@/lib/sales-constants";
-import { User, Building2, Wifi, MessageSquare, X, Check, Loader2, Save } from "lucide-react";
+import { User, Building2, MessageSquare, X, Loader2, Save, ShoppingCart } from "lucide-react";
 
 interface SalesFormProps {
   agentName: string;
 }
 
+const services = [
+  { name: "hasMobile", qtyName: "mobileQty", label: "Mobile", icon: "📱" },
+  { name: "hasInternet", qtyName: "internetQty", label: "Internet", icon: "🌐" },
+  { name: "hasTv", qtyName: "tvQty", label: "TV", icon: "📺" },
+  { name: "hasPhone", qtyName: "phoneQty", label: "Phone", icon: "📞" },
+  { name: "hasHomeSecurity", qtyName: "homeSecurityQty", label: "Security", icon: "🛡️" },
+] as const;
+
+type Service = typeof services[number];
+
 const sectionClass = "bg-white rounded-2xl border border-gray-100 shadow-sm shadow-gray-200/50 overflow-hidden";
 const sectionHeaderClass = "px-4 sm:px-5 py-3.5 sm:py-4 border-b border-gray-50 bg-gradient-to-r from-gray-50/80 to-white flex items-center gap-2.5";
 const sectionBodyClass = "px-4 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5";
-
 const inputClass = "w-full h-11 px-3.5 border border-gray-200 rounded-xl text-base sm:text-sm text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 focus:shadow-sm hover:border-gray-300";
 const selectClass = "w-full h-11 px-3.5 border border-gray-200 rounded-xl text-base sm:text-sm text-gray-900 bg-white transition-all duration-200 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 focus:shadow-sm hover:border-gray-300 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_14px_center] bg-no-repeat pr-10";
 const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
-const fieldGroupClass = "grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-5";
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
@@ -33,6 +41,38 @@ export function SalesForm({ agentName }: SalesFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [stock, setStock] = useState<Record<string, number>>({});
+  const [stockLoading, setStockLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/stock")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: { productName: string; availableQty: number }[]) => {
+        const map: Record<string, number> = {};
+        for (const item of data) {
+          map[item.productName.toLowerCase()] = item.availableQty;
+        }
+        setStock(map);
+      })
+      .catch(() => {})
+      .finally(() => setStockLoading(false));
+  }, []);
+
+  function toggleService(svc: Service) {
+    const newChecked = !checked[svc.name];
+    setChecked((prev) => ({ ...prev, [svc.name]: newChecked }));
+    if (!newChecked) {
+      setQuantities((prev) => ({ ...prev, [svc.qtyName]: 0 }));
+    } else {
+      setQuantities((prev) => ({ ...prev, [svc.qtyName]: 1 }));
+    }
+  }
+
+  function setQty(qtyName: string, val: number) {
+    setQuantities((prev) => ({ ...prev, [qtyName]: Math.max(0, val) }));
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,11 +81,6 @@ export function SalesForm({ agentName }: SalesFormProps) {
 
     const form = new FormData(e.currentTarget);
 
-    const services = [
-      "hasMobile", "hasInternet", "hasTv", "hasPhone", "hasHomeSecurity",
-    ] as const;
-
-    type Service = typeof services[number];
     const data: Record<string, unknown> = {};
     data.portal = form.get("portal") as string;
     data.provider = form.get("provider") as string;
@@ -58,7 +93,8 @@ export function SalesForm({ agentName }: SalesFormProps) {
     data.comments = form.get("comments") as string || "";
 
     for (const svc of services) {
-      data[svc] = form.get(svc) === "on";
+      data[svc.name] = form.get(svc.name) === "on";
+      data[svc.qtyName] = data[svc.name] ? (quantities[svc.qtyName] || 1) : 0;
     }
 
     const res = await fetch("/api/sales", {
@@ -89,7 +125,6 @@ export function SalesForm({ agentName }: SalesFormProps) {
         </div>
       )}
 
-      {/* Agent Info */}
       <div className={sectionClass}>
         <SectionHeader icon={User} title="Agent Info" />
         <div className={sectionBodyClass}>
@@ -106,11 +141,10 @@ export function SalesForm({ agentName }: SalesFormProps) {
         </div>
       </div>
 
-      {/* Sale Details */}
       <div className={sectionClass}>
         <SectionHeader icon={Building2} title="Sale Details" />
         <div className={sectionBodyClass}>
-          <div className={fieldGroupClass}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-5">
             <div>
               <label className={labelClass}>Portal <span className="text-red-400">*</span></label>
               <select name="portal" required className={selectClass}>
@@ -127,7 +161,7 @@ export function SalesForm({ agentName }: SalesFormProps) {
             </div>
           </div>
 
-          <div className={fieldGroupClass}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-5">
             <div>
               <label className={labelClass}>Customer Name <span className="text-red-400">*</span></label>
               <input type="text" name="customerName" required className={inputClass} placeholder="Full name" />
@@ -163,34 +197,57 @@ export function SalesForm({ agentName }: SalesFormProps) {
         </div>
       </div>
 
-      {/* Services Sold */}
       <div className={sectionClass}>
-        <SectionHeader icon={Wifi} title="Services Sold" />
+        <SectionHeader icon={ShoppingCart} title="Services Sold" />
         <div className="px-4 sm:px-5 py-4 sm:py-5">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-            {[
-              { name: "hasMobile", label: "Mobile", icon: "📱" },
-              { name: "hasInternet", label: "Internet", icon: "🌐" },
-              { name: "hasTv", label: "TV", icon: "📺" },
-              { name: "hasPhone", label: "Phone", icon: "📞" },
-              { name: "hasHomeSecurity", label: "Security", icon: "🛡️" },
-            ].map((svc) => (
-              <label key={svc.name} className="relative flex flex-col items-center gap-1 p-2.5 sm:p-3 rounded-xl border-2 border-gray-100 bg-white cursor-pointer transition-all duration-200 has-[:checked]:border-red-300 has-[:checked]:bg-red-50/30 hover:border-gray-200 active:scale-[0.98]">
-                <input type="checkbox" name={svc.name} className="peer sr-only" />
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-xs sm:text-sm flex-shrink-0 peer-checked:bg-red-50 peer-checked:border-red-200 transition-all duration-200">
-                  <span>{svc.icon}</span>
-                </div>
-                <span className="text-[10px] sm:text-xs font-semibold text-gray-700 peer-checked:text-red-700 transition-colors duration-200 text-center leading-tight">{svc.label}</span>
-                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-2 border-gray-300 flex items-center justify-center flex-shrink-0 peer-checked:bg-red-500 peer-checked:border-red-500 transition-all duration-200">
-                  <Check size={8} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-200" />
-                </div>
-              </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {services.map((svc) => (
+              <div
+                key={svc.name}
+                className={`rounded-xl border-2 p-3 transition-all duration-200 ${
+                  checked[svc.name]
+                    ? "border-red-300 bg-red-50/30"
+                    : "border-gray-100 bg-white hover:border-gray-200"
+                }`}
+              >
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name={svc.name}
+                    checked={!!checked[svc.name]}
+                    onChange={() => toggleService(svc)}
+                    className="w-4 h-4 rounded border-gray-300 text-red-500 focus:ring-red-400"
+                  />
+                  <span className="text-lg">{svc.icon}</span>
+                  <span className={`text-sm font-semibold ${checked[svc.name] ? "text-red-700" : "text-gray-700"}`}>
+                    {svc.label}
+                  </span>
+                </label>
+                {checked[svc.name] && (
+                  <div className="mt-2.5 sm:mt-3 pl-7 sm:pl-9">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                      <label className="text-[11px] sm:text-xs text-gray-500 font-medium">Qty:</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={quantities[svc.qtyName] || 1}
+                        onChange={(e) => setQty(svc.qtyName, parseInt(e.target.value) || 0)}
+                        className="w-16 sm:w-20 h-8 sm:h-9 px-2 sm:px-2.5 border border-gray-200 rounded-lg text-base sm:text-sm text-gray-900 bg-white focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                      />
+                      {!stockLoading && stock[svc.label.toLowerCase()] !== undefined && (
+                        <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                          Stock: {stock[svc.label.toLowerCase()]}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Comments */}
       <div className={sectionClass}>
         <SectionHeader icon={MessageSquare} title="Comments" />
         <div className={sectionBodyClass}>
@@ -203,7 +260,6 @@ export function SalesForm({ agentName }: SalesFormProps) {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
         <button
           type="button"

@@ -2,16 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { PORTALS, PROVIDERS, US_STATES, ACTIVATION_STATUSES, PAYMENT_STATUSES } from "@/lib/sales-constants";
-import { Building2, Wifi, CreditCard, MessageSquare, CalendarDays, X, Check, Loader2, Save, ArrowLeft, Lock, ShoppingCart } from "lucide-react";
-
-const sectionClass = "bg-white rounded-2xl border border-gray-100 shadow-sm shadow-gray-200/50 overflow-hidden";
-const sectionHeaderClass = "px-5 py-4 border-b border-gray-50 bg-gradient-to-r from-gray-50/80 to-white flex items-center gap-2.5";
-const sectionBodyClass = "px-4 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5";
-const inputClass = "w-full h-11 px-3.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 focus:shadow-sm hover:border-gray-300";
-const selectClass = "w-full h-11 px-3.5 border border-gray-200 rounded-xl text-sm text-gray-900 bg-white transition-all duration-200 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 focus:shadow-sm hover:border-gray-300 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_14px_center] bg-no-repeat pr-10";
-const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
-const fieldGroupClass = "grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-5";
+import { PORTALS, PROVIDERS, US_STATES } from "@/lib/sales-constants";
+import { ArrowLeft, Building2, Loader2, Lock, MessageSquare, Save, ShoppingCart, X, User } from "lucide-react";
 
 const services = [
   { key: "hasMobile", qtyKey: "mobileQty", label: "Mobile", icon: "📱" },
@@ -21,33 +13,33 @@ const services = [
   { key: "hasHomeSecurity", qtyKey: "homeSecurityQty", label: "Security", icon: "🛡️" },
 ] as const;
 
-function SectionHeader({ icon: Icon, title, badge }: { icon: React.ElementType; title: string; badge?: string }) {
+const sectionClass = "bg-white rounded-2xl border border-gray-100 shadow-sm shadow-gray-200/50 overflow-hidden";
+const sectionHeaderClass = "px-4 sm:px-5 py-3.5 sm:py-4 border-b border-gray-50 bg-gradient-to-r from-gray-50/80 to-white flex items-center gap-2.5";
+const sectionBodyClass = "px-4 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5";
+const inputClass = "w-full h-11 px-3.5 border border-gray-200 rounded-xl text-base sm:text-sm text-gray-900 placeholder-gray-400 bg-white transition-all duration-200 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 focus:shadow-sm hover:border-gray-300";
+const selectClass = "w-full h-11 px-3.5 border border-gray-200 rounded-xl text-base sm:text-sm text-gray-900 bg-white transition-all duration-200 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 focus:shadow-sm hover:border-gray-300 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_14px_center] bg-no-repeat pr-10";
+const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
+
+function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
     <div className={sectionHeaderClass}>
       <div className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
         <Icon size={14} className="text-red-500" />
       </div>
       <span className="text-sm font-bold text-gray-800">{title}</span>
-      {badge && (
-        <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
-          <Lock size={10} /> {badge}
-        </span>
-      )}
     </div>
   );
 }
 
-export default function EditSalePage() {
+export default function AgentEditSalePage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [userRole, setUserRole] = useState<string>("");
 
   const [form, setForm] = useState({
     saleDate: "",
-    agentName: "",
     portal: "",
     provider: "",
     customerName: "",
@@ -67,55 +59,49 @@ export default function EditSalePage() {
     phoneQty: 0,
     homeSecurityQty: 0,
     comments: "",
-    activationStatus: "Pending",
-    paymentStatus: "Unpaid",
+    paymentStatus: "",
   });
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/auth/session").then((r) => r.json()),
-      fetch("/api/sales").then((r) => r.json()),
-    ]).then(([session, data]) => {
-      setUserRole(session?.user?.role || "");
-      const sale = (data as Record<string, unknown>[]).find((s) => s.id === id) as Record<string, unknown> | undefined;
-      if (!sale) { setError("Sale not found"); setLoading(false); return; }
-      const d = new Date(sale.saleDate as string);
-      const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-      setForm({
-        saleDate: local,
-        agentName: sale.agentName as string,
-        portal: sale.portal as string,
-        provider: sale.provider as string,
-        customerName: sale.customerName as string,
-        customerPhone: sale.customerPhone as string,
-        customerAddress: sale.customerAddress as string,
-        city: sale.city as string,
-        state: sale.state as string,
-        zipCode: sale.zipCode as string,
-        hasMobile: sale.hasMobile as boolean,
-        hasInternet: sale.hasInternet as boolean,
-        hasTv: sale.hasTv as boolean,
-        hasPhone: sale.hasPhone as boolean,
-        hasHomeSecurity: sale.hasHomeSecurity as boolean,
-        mobileQty: (sale.mobileQty as number) || 0,
-        internetQty: (sale.internetQty as number) || 0,
-        tvQty: (sale.tvQty as number) || 0,
-        phoneQty: (sale.phoneQty as number) || 0,
-        homeSecurityQty: (sale.homeSecurityQty as number) || 0,
-        comments: (sale.comments as string) || "",
-        activationStatus: sale.activationStatus as string,
-        paymentStatus: sale.paymentStatus as string,
-      });
-      setLoading(false);
-    }).catch(() => { setError("Failed to load sale"); setLoading(false); });
+    fetch("/api/sales")
+      .then((r) => r.json())
+      .then((data: Record<string, unknown>[]) => {
+        const sale = data.find((s) => s.id === id) as Record<string, unknown> | undefined;
+        if (!sale) { setError("Sale not found"); setLoading(false); return; }
+        const d = new Date(sale.saleDate as string);
+        const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        setForm({
+          saleDate: local,
+          portal: sale.portal as string,
+          provider: sale.provider as string,
+          customerName: sale.customerName as string,
+          customerPhone: sale.customerPhone as string,
+          customerAddress: sale.customerAddress as string,
+          city: sale.city as string,
+          state: sale.state as string,
+          zipCode: sale.zipCode as string,
+          hasMobile: sale.hasMobile as boolean,
+          hasInternet: sale.hasInternet as boolean,
+          hasTv: sale.hasTv as boolean,
+          hasPhone: sale.hasPhone as boolean,
+          hasHomeSecurity: sale.hasHomeSecurity as boolean,
+          mobileQty: (sale.mobileQty as number) || 0,
+          internetQty: (sale.internetQty as number) || 0,
+          tvQty: (sale.tvQty as number) || 0,
+          phoneQty: (sale.phoneQty as number) || 0,
+          homeSecurityQty: (sale.homeSecurityQty as number) || 0,
+          comments: (sale.comments as string) || "",
+          paymentStatus: sale.paymentStatus as string,
+        });
+        setLoading(false);
+      })
+      .catch(() => { setError("Failed to load sale"); setLoading(false); });
   }, [id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError("");
-
-    const isSuperAdmin = userRole === "SUPER_ADMIN";
 
     const res = await fetch(`/api/sales/${id}`, {
       method: "PUT",
@@ -140,7 +126,6 @@ export default function EditSalePage() {
         phoneQty: form.phoneQty,
         homeSecurityQty: form.homeSecurityQty,
         comments: form.comments,
-        ...(isSuperAdmin ? { activationStatus: form.activationStatus, paymentStatus: form.paymentStatus } : {}),
         saleDate: form.saleDate ? `${form.saleDate}T00:00:00.000Z` : undefined,
       }),
     });
@@ -152,7 +137,7 @@ export default function EditSalePage() {
       return;
     }
 
-    router.push("/admin/sales");
+    router.push("/agent/sales");
     router.refresh();
   }
 
@@ -168,10 +153,8 @@ export default function EditSalePage() {
     return <div className="text-center py-16 text-gray-400">{error}</div>;
   }
 
-  const isSuperAdmin = userRole === "SUPER_ADMIN";
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 max-w-4xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
       <div className="flex items-center gap-3 mb-2">
         <button type="button" onClick={() => router.back()} className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50">
           <ArrowLeft size={18} className="text-gray-600" />
@@ -192,17 +175,11 @@ export default function EditSalePage() {
       )}
 
       <div className={sectionClass}>
-        <SectionHeader icon={CalendarDays} title="Sale Date & Agent" />
+        <SectionHeader icon={User} title="Sale Date" />
         <div className={sectionBodyClass}>
-          <div className={fieldGroupClass}>
-            <div>
-              <label className={labelClass}>Sale Date</label>
-              <input type="date" value={form.saleDate} onChange={(e) => set("saleDate", e.target.value)} className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Agent</label>
-              <input type="text" value={form.agentName} disabled className={`${inputClass} bg-gray-50 text-gray-500`} />
-            </div>
+          <div>
+            <label className={labelClass}>Sale Date</label>
+            <input type="date" value={form.saleDate} onChange={(e) => set("saleDate", e.target.value)} className={inputClass} />
           </div>
         </div>
       </div>
@@ -210,7 +187,7 @@ export default function EditSalePage() {
       <div className={sectionClass}>
         <SectionHeader icon={Building2} title="Sale Details" />
         <div className={sectionBodyClass}>
-          <div className={fieldGroupClass}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-5">
             <div>
               <label className={labelClass}>Portal <span className="text-red-400">*</span></label>
               <select value={form.portal} onChange={(e) => set("portal", e.target.value)} required className={selectClass}>
@@ -226,7 +203,7 @@ export default function EditSalePage() {
               </select>
             </div>
           </div>
-          <div className={fieldGroupClass}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-5">
             <div>
               <label className={labelClass}>Customer Name <span className="text-red-400">*</span></label>
               <input type="text" value={form.customerName} onChange={(e) => set("customerName", e.target.value)} required className={inputClass} />
@@ -300,45 +277,20 @@ export default function EditSalePage() {
       </div>
 
       <div className={sectionClass}>
-        <SectionHeader
-          icon={CreditCard}
-          title="Payment & Activation"
-          badge={isSuperAdmin ? undefined : "Super admin only"}
-        />
+        <SectionHeader icon={Lock} title="Payment Status" />
         <div className={sectionBodyClass}>
-          <div className={fieldGroupClass}>
-            <div>
-              <label className={labelClass}>Activation</label>
-              <select
-                value={form.activationStatus}
-                onChange={(e) => set("activationStatus", e.target.value)}
-                disabled={!isSuperAdmin}
-                className={`${selectClass} ${!isSuperAdmin ? "opacity-60 cursor-not-allowed bg-gray-50" : ""}`}
-              >
-                {ACTIVATION_STATUSES.map((st) => <option key={st} value={st}>{st}</option>)}
-              </select>
-              {!isSuperAdmin && (
-                <p className="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
-                  <Lock size={10} /> Only super admin can change this
-                </p>
-              )}
+          <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Current Status</p>
+                <p className="text-lg font-bold text-gray-800 mt-0.5">{form.paymentStatus}</p>
+              </div>
+              <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg">
+                <Lock size={14} />
+                <span className="text-[11px] font-semibold uppercase">Locked</span>
+              </div>
             </div>
-            <div>
-              <label className={labelClass}>Payment</label>
-              <select
-                value={form.paymentStatus}
-                onChange={(e) => set("paymentStatus", e.target.value)}
-                disabled={!isSuperAdmin}
-                className={`${selectClass} ${!isSuperAdmin ? "opacity-60 cursor-not-allowed bg-gray-50" : ""}`}
-              >
-                {PAYMENT_STATUSES.map((st) => <option key={st} value={st}>{st}</option>)}
-              </select>
-              {!isSuperAdmin && (
-                <p className="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
-                  <Lock size={10} /> Only super admin can change this
-                </p>
-              )}
-            </div>
+            <p className="text-xs text-gray-400 mt-2">Payment status cannot be changed by agents. Contact your admin for changes.</p>
           </div>
         </div>
       </div>
@@ -361,9 +313,9 @@ export default function EditSalePage() {
         <button type="submit" disabled={submitting}
           className="w-full sm:flex-1 h-12 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 text-white text-sm sm:text-base font-bold shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:from-red-700 hover:to-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2">
           {submitting ? (
-            <><Loader2 size={18} className="animate-spin" /> Updating...</>
+            <><Loader2 size={18} className="animate-spin" /> Saving...</>
           ) : (
-            <><Save size={18} /> Update Sale</>
+            <><Save size={18} /> Save Changes</>
           )}
         </button>
       </div>

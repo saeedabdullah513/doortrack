@@ -18,19 +18,19 @@ export async function GET(req: NextRequest) {
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
   if (dateFrom || dateTo) {
-    where.createdAt = {};
-    if (dateFrom) (where.createdAt as Record<string, unknown>).gte = new Date(dateFrom);
-    if (dateTo) (where.createdAt as Record<string, unknown>).lte = new Date(dateTo + "T23:59:59.999Z");
+    where.saleDate = {};
+    if (dateFrom) (where.saleDate as Record<string, unknown>).gte = new Date(dateFrom);
+    if (dateTo) (where.saleDate as Record<string, unknown>).lte = new Date(dateTo + "T23:59:59.999Z");
   }
 
   const sales = await prisma.salesEntry.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: { saleDate: "desc" },
   });
 
   const rows = sales.map((s, i) => ({
     "#": i + 1,
-    "Date": new Date(s.createdAt).toLocaleDateString("en-US", { timeZone: "America/Chicago" }),
+    "Date": new Date(s.saleDate).toLocaleDateString("en-US", { timeZone: "America/Chicago" }),
     "Agent Name": s.agentName,
     "Portal": s.portal,
     "Provider": s.provider,
@@ -40,11 +40,11 @@ export async function GET(req: NextRequest) {
     "City": s.city,
     "State": s.state,
     "Zip Code": s.zipCode,
-    "Mobile": s.hasMobile ? "Yes" : "",
-    "Internet": s.hasInternet ? "Yes" : "",
-    "TV": s.hasTv ? "Yes" : "",
-    "Phone": s.hasPhone ? "Yes" : "",
-    "Home Security": s.hasHomeSecurity ? "Yes" : "",
+    "Mobile Qty": s.mobileQty || (s.hasMobile ? 1 : 0),
+    "Internet Qty": s.internetQty || (s.hasInternet ? 1 : 0),
+    "TV Qty": s.tvQty || (s.hasTv ? 1 : 0),
+    "Phone Qty": s.phoneQty || (s.hasPhone ? 1 : 0),
+    "Security Qty": s.homeSecurityQty || (s.hasHomeSecurity ? 1 : 0),
     "Comments": s.comments ?? "",
     "Activation Status": s.activationStatus,
     "Payment Status": s.paymentStatus,
@@ -57,8 +57,8 @@ export async function GET(req: NextRequest) {
   const colWidths = [
     { wch: 4 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 14 },
     { wch: 22 }, { wch: 16 }, { wch: 26 }, { wch: 14 }, { wch: 6 },
-    { wch: 10 }, { wch: 8 }, { wch: 8 }, { wch: 6 }, { wch: 8 },
-    { wch: 14 }, { wch: 22 }, { wch: 18 }, { wch: 16 },
+    { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 8 }, { wch: 10 },
+    { wch: 12 }, { wch: 22 }, { wch: 18 }, { wch: 16 },
   ];
   ws["!cols"] = colWidths;
 

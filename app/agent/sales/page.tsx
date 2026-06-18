@@ -2,13 +2,13 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 
 export default async function AgentSalesPage() {
   const session = await auth();
   const sales = await prisma.salesEntry.findMany({
     where: { agentId: session!.user.id },
-    orderBy: { createdAt: "desc" },
+    orderBy: { saleDate: "desc" },
   });
 
   return (
@@ -48,16 +48,25 @@ export default async function AgentSalesPage() {
               return (
                 <div key={s.id} className="bg-white rounded-xl border border-gray-100 p-3.5 space-y-2.5 shadow-sm">
                   <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-semibold text-gray-800 text-sm">{s.customerName}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-800 text-sm truncate">{s.customerName}</p>
                       <p className="text-xs text-gray-400">{s.customerPhone}</p>
                     </div>
-                    <span className="text-[10px] text-gray-400 whitespace-nowrap">{formatDate(s.createdAt)}</span>
+                    <Link
+                      href={`/agent/sales/${s.id}`}
+                      className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 hover:border-gray-300 transition-all flex-shrink-0 ml-2"
+                      title="Edit"
+                    >
+                      <Pencil size={13} className="text-gray-500" />
+                    </Link>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <span className="font-medium">{s.portal}</span>
                     <span className="text-gray-300">·</span>
                     <span>{s.provider}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                    <span>{formatDate(s.saleDate)}</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {services.map((svc) => (
@@ -102,6 +111,7 @@ export default async function AgentSalesPage() {
                   <th className="px-3 py-2 text-left">Services</th>
                   <th className="px-3 py-2 text-left">Activation</th>
                   <th className="px-3 py-2 text-left">Payment</th>
+                  <th className="px-3 py-2 text-center w-16">Edit</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -116,7 +126,7 @@ export default async function AgentSalesPage() {
 
                   return (
                     <tr key={s.id} className="hover:bg-gray-50">
-                      <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap text-xs">{formatDate(s.createdAt)}</td>
+                      <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap text-xs">{formatDate(s.saleDate)}</td>
                       <td className="px-3 py-2.5">
                         <div className="font-medium text-gray-800 text-sm">{s.customerName}</div>
                         <div className="text-gray-400 text-xs">{s.customerPhone}</div>
@@ -155,6 +165,15 @@ export default async function AgentSalesPage() {
                         }`}>
                           {s.paymentStatus}
                         </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <Link
+                          href={`/agent/sales/${s.id}`}
+                          className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 hover:border-gray-300 transition-all mx-auto"
+                          title="Edit"
+                        >
+                          <Pencil size={14} className="text-gray-500" />
+                        </Link>
                       </td>
                     </tr>
                   );
