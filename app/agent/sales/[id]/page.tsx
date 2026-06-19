@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { PORTALS, PROVIDERS, US_STATES } from "@/lib/sales-constants";
+import { ACTIVATION_STATUSES, PORTALS, PROVIDERS, US_STATES } from "@/lib/sales-constants";
 import { ArrowLeft, Building2, Loader2, Lock, MessageSquare, Save, ShoppingCart, X, User } from "lucide-react";
 
 const services = [
@@ -59,6 +59,7 @@ export default function AgentEditSalePage() {
     phoneQty: 0,
     homeSecurityQty: 0,
     comments: "",
+    activationStatus: "",
     paymentStatus: "",
   });
 
@@ -91,6 +92,7 @@ export default function AgentEditSalePage() {
           phoneQty: (sale.phoneQty as number) || 0,
           homeSecurityQty: (sale.homeSecurityQty as number) || 0,
           comments: (sale.comments as string) || "",
+          activationStatus: sale.activationStatus as string,
           paymentStatus: sale.paymentStatus as string,
         });
         setLoading(false);
@@ -126,7 +128,7 @@ export default function AgentEditSalePage() {
         phoneQty: form.phoneQty,
         homeSecurityQty: form.homeSecurityQty,
         comments: form.comments,
-        saleDate: form.saleDate ? `${form.saleDate}T00:00:00.000Z` : undefined,
+        saleDate: form.saleDate ? `${form.saleDate}T12:00:00.000Z` : undefined,
       }),
     });
 
@@ -291,6 +293,25 @@ export default function AgentEditSalePage() {
               </div>
             </div>
             <p className="text-xs text-gray-400 mt-2">Payment status cannot be changed by agents. Contact your admin for changes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className={sectionClass}>
+        <SectionHeader icon={Lock} title="Activation Status" />
+        <div className={sectionBodyClass}>
+          <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Current Status</p>
+                <p className="text-lg font-bold text-gray-800 mt-0.5">{form.activationStatus}</p>
+              </div>
+              <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg">
+                <Lock size={14} />
+                <span className="text-[11px] font-semibold uppercase">Locked</span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">Activation status is managed by your admin. Contact them for changes.</p>
           </div>
         </div>
       </div>

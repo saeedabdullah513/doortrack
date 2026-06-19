@@ -39,7 +39,6 @@ export async function PUT(
 
   const { id } = await params;
   const isAgent = session.user.role === "AGENT";
-  const isSuperAdmin = session.user.role === "SUPER_ADMIN";
 
   const existing = await prisma.salesEntry.findUnique({ where: { id } });
   if (!existing) {
@@ -63,9 +62,11 @@ export async function PUT(
     data: {
       ...data,
       ...(saleDate ? { saleDate: new Date(saleDate) } : {}),
-      ...(isAgent ? { activationStatus: "Pending", paymentStatus: "Unpaid" } : {}),
-      ...(!isAgent && isSuperAdmin && activationStatus ? { activationStatus } : {}),
-      ...(!isAgent && isSuperAdmin && paymentStatus ? { paymentStatus } : {}),
+      // Agent: force payment to Unpaid, never touch activation (keep existing value)
+      ...(isAgent ? { paymentStatus: "Unpaid" } : {}),
+      // Admin/Super Admin: allow activation & payment changes
+      ...(!isAgent && activationStatus ? { activationStatus } : {}),
+      ...(!isAgent && paymentStatus ? { paymentStatus } : {}),
     },
   });
 

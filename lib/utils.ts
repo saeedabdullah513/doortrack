@@ -92,19 +92,19 @@ export function toDecimal(hours: number | null): string {
 }
 
 /**
- * Returns UTC midnight for the current US Central calendar date,
+ * Returns a Date for the current US Central calendar date,
  * or for the given YYYY-MM-DD central date string.
  *
- * Prisma serialises DateTime → MySQL DATE using the UTC date component.
- * Passing a UTC midnight timestamp for the target Central calendar date
- * preserves the intended date when Prisma writes the DATE value.
+ * Uses noon UTC so MySQL timezone conversion (e.g. America/Chicago)
+ * does not shift the date backward when storing to a @db.Date column.
+ * Noon UTC is always the same calendar date as Central time (6-7 AM CT).
  */
 export function localMidnight(dateStr?: string): Date {
   if (dateStr) {
-    return new Date(`${dateStr}T00:00:00.000Z`);
+    return new Date(`${dateStr}T12:00:00.000Z`);
   }
   const parts = centralDateParts(new Date());
-  return new Date(`${parts.year}-${parts.month}-${parts.day}T00:00:00.000Z`);
+  return new Date(`${parts.year}-${parts.month}-${parts.day}T12:00:00.000Z`);
 }
 
 export function centralDaysAgo(days: number): Date {

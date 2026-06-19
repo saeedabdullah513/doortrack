@@ -115,7 +115,7 @@ export default function EditSalePage() {
     setSubmitting(true);
     setError("");
 
-    const isSuperAdmin = userRole === "SUPER_ADMIN";
+    const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
     const res = await fetch(`/api/sales/${id}`, {
       method: "PUT",
@@ -140,8 +140,8 @@ export default function EditSalePage() {
         phoneQty: form.phoneQty,
         homeSecurityQty: form.homeSecurityQty,
         comments: form.comments,
-        ...(isSuperAdmin ? { activationStatus: form.activationStatus, paymentStatus: form.paymentStatus } : {}),
-        saleDate: form.saleDate ? `${form.saleDate}T00:00:00.000Z` : undefined,
+        ...(isAdmin ? { activationStatus: form.activationStatus, paymentStatus: form.paymentStatus } : {}),
+        saleDate: form.saleDate ? `${form.saleDate}T12:00:00.000Z` : undefined,
       }),
     });
 
@@ -168,7 +168,7 @@ export default function EditSalePage() {
     return <div className="text-center py-16 text-gray-400">{error}</div>;
   }
 
-  const isSuperAdmin = userRole === "SUPER_ADMIN";
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
@@ -303,7 +303,7 @@ export default function EditSalePage() {
         <SectionHeader
           icon={CreditCard}
           title="Payment & Activation"
-          badge={isSuperAdmin ? undefined : "Super admin only"}
+          badge={isAdmin ? undefined : "Admin only"}
         />
         <div className={sectionBodyClass}>
           <div className={fieldGroupClass}>
@@ -312,14 +312,14 @@ export default function EditSalePage() {
               <select
                 value={form.activationStatus}
                 onChange={(e) => set("activationStatus", e.target.value)}
-                disabled={!isSuperAdmin}
-                className={`${selectClass} ${!isSuperAdmin ? "opacity-60 cursor-not-allowed bg-gray-50" : ""}`}
+                disabled={!isAdmin}
+                className={`${selectClass} ${!isAdmin ? "opacity-60 cursor-not-allowed bg-gray-50" : ""}`}
               >
                 {ACTIVATION_STATUSES.map((st) => <option key={st} value={st}>{st}</option>)}
               </select>
-              {!isSuperAdmin && (
+              {!isAdmin && (
                 <p className="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
-                  <Lock size={10} /> Only super admin can change this
+                  <Lock size={10} /> Only admin can change this
                 </p>
               )}
             </div>
@@ -328,14 +328,14 @@ export default function EditSalePage() {
               <select
                 value={form.paymentStatus}
                 onChange={(e) => set("paymentStatus", e.target.value)}
-                disabled={!isSuperAdmin}
-                className={`${selectClass} ${!isSuperAdmin ? "opacity-60 cursor-not-allowed bg-gray-50" : ""}`}
+                disabled={!isAdmin}
+                className={`${selectClass} ${!isAdmin ? "opacity-60 cursor-not-allowed bg-gray-50" : ""}`}
               >
                 {PAYMENT_STATUSES.map((st) => <option key={st} value={st}>{st}</option>)}
               </select>
-              {!isSuperAdmin && (
+              {!isAdmin && (
                 <p className="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
-                  <Lock size={10} /> Only super admin can change this
+                  <Lock size={10} /> Only admin can change this
                 </p>
               )}
             </div>
