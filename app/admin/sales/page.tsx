@@ -38,18 +38,24 @@ interface Agent {
   name: string;
 }
 
+const SERVICE_KEYWORDS: Record<string, keyof Sale> = {
+  mobile: "hasMobile",
+  internet: "hasInternet",
+  tv: "hasTv",
+  phone: "hasPhone",
+  security: "hasHomeSecurity",
+};
+
 function matchesSearch(sale: Sale, term: string): boolean {
   if (!term) return true;
-  const q = term.toLowerCase();
-  const dateStr = formatDate(sale.createdAt).toLowerCase();
+  const q = term.toLowerCase().trim();
+  const words = q.split(/\s+/);
+  const matchedKeyword = words.find((w) => SERVICE_KEYWORDS[w]);
+  if (matchedKeyword) {
+    return sale[SERVICE_KEYWORDS[matchedKeyword]] === true;
+  }
+  const dateStr = formatDate(sale.saleDate).toLowerCase();
   const address = `${sale.customerAddress} ${sale.city} ${sale.state} ${sale.zipCode}`.toLowerCase();
-  const services = [
-    sale.hasMobile && "mobile",
-    sale.hasInternet && "internet",
-    sale.hasTv && "tv",
-    sale.hasPhone && "phone",
-    sale.hasHomeSecurity && "security",
-  ].filter(Boolean).join(" ");
 
   return (
     sale.customerName.toLowerCase().includes(q) ||
@@ -61,8 +67,7 @@ function matchesSearch(sale: Sale, term: string): boolean {
     sale.paymentStatus.toLowerCase().includes(q) ||
     address.includes(q) ||
     (sale.comments || "").toLowerCase().includes(q) ||
-    dateStr.includes(q) ||
-    services.includes(q)
+    dateStr.includes(q)
   );
 }
 
@@ -202,7 +207,7 @@ export default function AdminSalesPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">
               <tr>
-                <th className="px-3 py-3 text-left">Sell Date</th>
+                <th className="px-3 py-3 text-left">Sale Date</th>
                 <th className="px-3 py-3 text-left">Agent</th>
                 <th className="px-3 py-3 text-left">Customer</th>
                 <th className="px-3 py-3 text-left">Phone</th>
@@ -238,7 +243,13 @@ export default function AdminSalesPage() {
                     s.hasHomeSecurity && "Security",
                   ].filter(Boolean);
 
-                  const totalQty = (s.mobileQty || 0) + (s.internetQty || 0) + (s.tvQty || 0) + (s.phoneQty || 0) + (s.homeSecurityQty || 0);
+                  const qtyItems = [
+                    s.hasMobile && { label: "Mobile", qty: s.mobileQty },
+                    s.hasInternet && { label: "Internet", qty: s.internetQty },
+                    s.hasTv && { label: "TV", qty: s.tvQty },
+                    s.hasPhone && { label: "Phone", qty: s.phoneQty },
+                    s.hasHomeSecurity && { label: "Security", qty: s.homeSecurityQty },
+                  ].filter(Boolean) as { label: string; qty: number }[];
 
                   return (
                     <tr key={s.id} className="hover:bg-gray-50">
@@ -263,7 +274,16 @@ export default function AdminSalesPage() {
                           {services.length === 0 && <span className="text-gray-400 text-xs">—</span>}
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-gray-600 text-xs font-medium">{totalQty || "—"}</td>
+                      <td className="px-3 py-3">
+                        <div className="flex flex-col gap-0.5">
+                          {qtyItems.map((item) => (
+                            <span key={item.label} className="text-xs text-gray-600 whitespace-nowrap">
+                              {item.label}: {item.qty}
+                            </span>
+                          ))}
+                          {qtyItems.length === 0 && <span className="text-gray-400 text-xs">—</span>}
+                        </div>
+                      </td>
                       <td className="px-3 py-3">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           s.activationStatus === "Active" ? "bg-green-50 text-green-700" :
@@ -401,8 +421,13 @@ export default function AdminSalesPage() {
                   ))}
                   {services.length === 0 && <span className="text-gray-400 text-[10px]">No services</span>}
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                  <span className="font-medium">Qty: {(s.mobileQty || 0) + (s.internetQty || 0) + (s.tvQty || 0) + (s.phoneQty || 0) + (s.homeSecurityQty || 0) || "—"}</span>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-gray-500">
+                  {s.hasMobile && <span>Mobile: {s.mobileQty}</span>}
+                  {s.hasInternet && <span>Internet: {s.internetQty}</span>}
+                  {s.hasTv && <span>TV: {s.tvQty}</span>}
+                  {s.hasPhone && <span>Phone: {s.phoneQty}</span>}
+                  {s.hasHomeSecurity && <span>Security: {s.homeSecurityQty}</span>}
+                  {!s.hasMobile && !s.hasInternet && !s.hasTv && !s.hasPhone && !s.hasHomeSecurity && <span>—</span>}
                 </div>
                 <div className="flex items-center gap-2 pt-1">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
