@@ -38,7 +38,22 @@ export function formatTime(date: Date | string | null): string {
   });
 }
 
+/** Format a calendar date (e.g. AttendanceDay.date, saleDate).
+ *  Uses UTC so @db.Date values (midnight UTC) display the correct
+ *  calendar date without timezone shifting. */
 export function formatDate(date: Date | string): string {
+  const d = new Date(date);
+  return d.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** Format a DateTime date with Central timezone (e.g. punchInTime). */
+export function formatCentralDate(date: Date | string): string {
   return formatCentral(date, {
     weekday: "short",
     month: "short",
@@ -92,19 +107,20 @@ export function toDecimal(hours: number | null): string {
 }
 
 /**
- * Returns a Date for the current US Central calendar date,
+ * Returns a midnight-UTC Date for the current US Central calendar date,
  * or for the given YYYY-MM-DD central date string.
  *
- * Uses noon UTC so MySQL timezone conversion (e.g. America/Chicago)
- * does not shift the date backward when storing to a @db.Date column.
- * Noon UTC is always the same calendar date as Central time (6-7 AM CT).
+ * Uses Date.UTC() so the Date has zero time component — this ensures
+ * MySQL @db.Date comparisons in findUnique/findFirst match correctly
+ * (no time-part mismatch that causes unique-constraint violations).
  */
 export function localMidnight(dateStr?: string): Date {
   if (dateStr) {
-    return new Date(`${dateStr}T12:00:00.000Z`);
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d));
   }
   const parts = centralDateParts(new Date());
-  return new Date(`${parts.year}-${parts.month}-${parts.day}T12:00:00.000Z`);
+  return new Date(Date.UTC(+parts.year, +parts.month - 1, +parts.day));
 }
 
 export function centralDaysAgo(days: number): Date {

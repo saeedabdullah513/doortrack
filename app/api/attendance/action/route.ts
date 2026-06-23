@@ -141,9 +141,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[attendance/action]", err);
-    return NextResponse.json(
-      { error: "Server error. Please try again." },
-      { status: 500 }
-    );
+    const message =
+      err instanceof Error ? err.message : "Server error. Please try again.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

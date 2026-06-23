@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCentralDate } from "@/lib/utils";
 import Link from "next/link";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ export default async function AdminAgentsPage() {
                   <td className="px-4 py-3 font-medium text-gray-800">{a.name}</td>
                   <td className="px-4 py-3 text-gray-600">{a.email}</td>
                   <td className="px-4 py-3 text-gray-500">{a.phone ?? "—"}</td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(a.createdAt)}</td>
+                  <td className="px-4 py-3 text-gray-400 text-xs">{formatCentralDate(a.createdAt)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                       a.isActive

@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatTime, formatDate, centralDaysAgo } from "@/lib/utils";
+import { formatTime, formatDate, formatCentralDate, centralDaysAgo } from "@/lib/utils";
 import { MapPin } from "lucide-react";
 
 export default async function AgentHistoryPage() {
@@ -30,7 +30,7 @@ export default async function AgentHistoryPage() {
         {entries.map((e) => (
           <div key={e.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-              <p className="text-xs font-semibold text-gray-500">{formatDate(e.punchInTime)} · Session {e.sequence}</p>
+              <p className="text-xs font-semibold text-gray-500">{formatCentralDate(e.punchInTime)} · Session {e.sequence}</p>
               {e.entryHours && (
                 <span className="text-xs font-medium text-gray-600">{String(Number(e.entryHours).toFixed(2))}h</span>
               )}
