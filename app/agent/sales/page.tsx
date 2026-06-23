@@ -45,6 +45,8 @@ export default async function AgentSalesPage() {
                 s.hasHomeSecurity && "Security",
               ].filter(Boolean);
 
+              const totalQty = (s.mobileQty || 0) + (s.internetQty || 0) + (s.tvQty || 0) + (s.phoneQty || 0) + (s.homeSecurityQty || 0);
+
               return (
                 <div key={s.id} className="bg-white rounded-xl border border-gray-100 p-3.5 space-y-2.5 shadow-sm">
                   <div className="flex items-start justify-between">
@@ -76,6 +78,9 @@ export default async function AgentSalesPage() {
                     ))}
                     {services.length === 0 && <span className="text-gray-400 text-[10px]">No services</span>}
                   </div>
+                  <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                    <span className="font-medium">Qty: {totalQty || "—"}</span>
+                  </div>
                   <div className="flex items-center gap-2 pt-1">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
                       s.activationStatus === "Active" ? "bg-green-50 text-green-700" :
@@ -105,10 +110,11 @@ export default async function AgentSalesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">
-                  <th className="px-3 py-2 text-left">Date</th>
+                  <th className="px-3 py-2 text-left">Sell Date</th>
                   <th className="px-3 py-2 text-left">Customer</th>
                   <th className="px-3 py-2 text-left">Portal</th>
                   <th className="px-3 py-2 text-left">Services</th>
+                  <th className="px-3 py-2 text-left">Qty</th>
                   <th className="px-3 py-2 text-left">Activation</th>
                   <th className="px-3 py-2 text-left">Payment</th>
                   <th className="px-3 py-2 text-center w-16">Edit</th>
@@ -123,6 +129,8 @@ export default async function AgentSalesPage() {
                     s.hasPhone && "Phone",
                     s.hasHomeSecurity && "Security",
                   ].filter(Boolean);
+
+                  const totalQty = (s.mobileQty || 0) + (s.internetQty || 0) + (s.tvQty || 0) + (s.phoneQty || 0) + (s.homeSecurityQty || 0);
 
                   return (
                     <tr key={s.id} className="hover:bg-gray-50">
@@ -145,6 +153,7 @@ export default async function AgentSalesPage() {
                           {services.length === 0 && <span className="text-gray-400 text-xs">None</span>}
                         </div>
                       </td>
+                      <td className="px-3 py-2.5 text-gray-600 text-xs font-medium">{totalQty || "—"}</td>
                       <td className="px-3 py-2.5">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           s.activationStatus === "Active" ? "bg-green-50 text-green-700" :

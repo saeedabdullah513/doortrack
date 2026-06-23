@@ -10,7 +10,7 @@ const schema = z.object({
   type: z.enum(["PUNCH_IN", "PUNCH_OUT"]),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
-  accuracy: z.number().optional(),
+  accuracy: z.number().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -32,12 +32,9 @@ export async function POST(req: NextRequest) {
     const todayDate = localMidnight();
 
     // Fire geocoding — we await it just before we need the address
-    const addressPromise = reverseGeocode(latitude, longitude);
+    const addressPromise = reverseGeocode(latitude, longitude).catch(() => null);
 
     if (type === "PUNCH_IN") {
-      // Find existing day or create a new one.
-      // We use findUnique + create separately to avoid the upsert race condition
-      // that throws P2002 when the record exists but the date param has a tiny offset.
       let day = await prisma.attendanceDay.findUnique({
         where: { userId_date: { userId, date: todayDate } },
       });
@@ -48,7 +45,6 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Block a second punch-in if one is already open
       const openEntry = await prisma.punchEntry.findFirst({
         where: { dayId: day.id, punchOutTime: null },
       });
